@@ -4,12 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +19,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -33,19 +36,21 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -57,26 +62,31 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PPA_SEM1Theme {
-                mainApp()
+                MainApp()
             }
         }
     }
 }
 
 @Composable
-fun mainApp() {
+fun MainApp() {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "mainpage") {
         composable("mainpage") {MainPage(Modifier.padding(12.dp), navController, "cool cs kids")}
         composable("loginpage") { LoginPage(Modifier.padding(12.dp), navController) }
         composable("paymentpage") { PaymentPage(Modifier.padding(12.dp), navController) }
         composable("itempage") { ItemPage(Modifier.padding(12.dp), navController) }
+        composable("paidpage") { PaidPage(Modifier.padding(12.dp), navController) }
+        composable("info") { Info(navController) }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainPage(padding: Modifier, navController: NavController, name: String) {
+
+    var search by remember { mutableStateOf("") }
+
     Scaffold (
         topBar = {
             TopAppBar(
@@ -90,19 +100,35 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
                     navigationIconContentColor = Color.White,
                     titleContentColor = Color.White,
                     actionIconContentColor = Color.White
-                )
+                ),
+                actions = {
+                    IconButton(onClick = {
+                        navController.navigate("paymentpage")
+                    }) {Icon(Icons.Default.ShoppingCart, contentDescription = "Payment")}
+                    IconButton(onClick = {
+                        navController.navigate("loginpage")
+                    }) {Icon(Icons.Default.AccountCircle, contentDescription = "login")}
+                }
             )
         }, content = { paddingValues ->
             // Main content with padding applied correctly
+
             LazyColumn(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .background(Color.LightGray)
             ) {
+                stickyHeader {
+                    TextField(value = search, onValueChange = {search = it},
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Search by keyword")},
+                        leadingIcon = {Icon(Icons.Default.Search, contentDescription = "Search")})
+                }
                 repeat(20) {
                     item {
                         ElevatedCard(
+                            onClick = {navController.navigate("itempage")},
                             elevation = CardDefaults.cardElevation(
                                 defaultElevation = 6.dp
                             ),
@@ -187,8 +213,46 @@ fun PaidPage(padding: Modifier, navController: NavController) {
 }
 
 @Composable
-fun ItemPage(padding: Modifier, navController: NavController) {
-    TODO("Not yet implemented")
+fun ItemPage(modifier: Modifier, navController: NavController) {
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                this.alpha = 0.5f
+            },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.padding(15.dp))
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_background),
+            contentDescription = "Item",
+            modifier = Modifier
+                .size(300.dp)
+        )
+
+        Spacer(modifier = Modifier.padding(15.dp))
+        Text(text = "ADD ITEM NAME HERE",
+            fontWeight = FontWeight.Bold,
+        )
+
+        Spacer(modifier = Modifier.padding(15.dp))
+        Text(text = "ADD PRICE HERE",
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(modifier = Modifier.padding(15.dp))
+        Text(text = "QUANTITY ")
+
+        Spacer(modifier = Modifier.padding(15.dp))
+        Button(
+            onClick = {},
+            modifier = Modifier
+                .size(width = 150.dp, height = 50.dp),
+            content = {
+                Text(text = "Add to Cart")
+            }
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -236,54 +300,37 @@ fun PaidPagepreview() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun item (paddingValues: PaddingValues) {
-    Column (
-        modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()
-            .graphicsLayer {
-                this.alpha = 0.5f
-            },
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.padding(15.dp))
-        Image(
-            painter = painterResource(R.drawable.ic_launcher_background),
-            contentDescription = "Item",
-            modifier = Modifier
-                .size(300.dp)
-        )
-
-        Spacer(modifier = Modifier.padding(15.dp))
-        Text(text = "ADD ITEM NAME HERE",
-            fontWeight = FontWeight.Bold,
-        )
-
-        Spacer(modifier = Modifier.padding(15.dp))
-        Text(text = "ADD PRICE HERE",
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(modifier = Modifier.padding(15.dp))
-        Text(text = "QUANTITY ")
-
-        Spacer(modifier = Modifier.padding(15.dp))
-        Button(
-            onClick = {},
-            modifier = Modifier
-                .size(width = 150.dp, height = 50.dp),
-            content = {
-                Text(text = "Add to Cart")
+fun Info(navController: NavController){
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Who are we") },
+                navigationIcon = {
+                    IconButton(onClick = {navController.popBackStack()}) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                }
+            )
+        },
+        content = {
+                paddingValues ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ){
+                Spacer(Modifier.height(30.dp))
+                Image(
+                    painter = painterResource(R.drawable.todo),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+                Text("blah blah")
             }
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun item() {
-    PA_itemScreensTheme {
-        item(PaddingValues(15.dp))
-    }
+        }
+    )
 }

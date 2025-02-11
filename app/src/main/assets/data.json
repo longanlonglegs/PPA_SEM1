@@ -1,0 +1,18 @@
+[
+  {
+    "name": "shirt",
+    "price": 19.99
+  },
+  {
+    "name": "hoodie",
+    "price": 69.99
+  },
+  {
+    "name": "shoe",
+    "price": 79.99
+  },
+  {
+    "name": "shorts",
+    "price": 10.49
+  }
+]
