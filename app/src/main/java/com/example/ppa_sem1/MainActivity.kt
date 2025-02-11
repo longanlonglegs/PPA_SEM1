@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -231,5 +233,57 @@ fun PaidPagepreview() {
     PPA_SEM1Theme {
         val navController = rememberNavController()
         PaidPage(Modifier.padding(12.dp), navController)
+    }
+}
+
+@Composable
+fun item (paddingValues: PaddingValues) {
+    Column (
+        modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize()
+            .graphicsLayer {
+                this.alpha = 0.5f
+            },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.padding(15.dp))
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_background),
+            contentDescription = "Item",
+            modifier = Modifier
+                .size(300.dp)
+        )
+
+        Spacer(modifier = Modifier.padding(15.dp))
+        Text(text = "ADD ITEM NAME HERE",
+            fontWeight = FontWeight.Bold,
+        )
+
+        Spacer(modifier = Modifier.padding(15.dp))
+        Text(text = "ADD PRICE HERE",
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(modifier = Modifier.padding(15.dp))
+        Text(text = "QUANTITY ")
+
+        Spacer(modifier = Modifier.padding(15.dp))
+        Button(
+            onClick = {},
+            modifier = Modifier
+                .size(width = 150.dp, height = 50.dp),
+            content = {
+                Text(text = "Add to Cart")
+            }
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun item() {
+    PA_itemScreensTheme {
+        item(PaddingValues(15.dp))
     }
 }
