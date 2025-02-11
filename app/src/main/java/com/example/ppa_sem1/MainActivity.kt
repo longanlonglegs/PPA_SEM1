@@ -10,7 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,8 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
@@ -46,14 +45,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -65,14 +62,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PPA_SEM1Theme {
-                mainApp()
+                MainApp()
             }
         }
     }
 }
 
 @Composable
-fun mainApp() {
+fun MainApp() {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "mainpage") {
         composable("mainpage") {MainPage(Modifier.padding(12.dp), navController, "cool cs kids")}
@@ -80,6 +77,7 @@ fun mainApp() {
         composable("paymentpage") { PaymentPage(Modifier.padding(12.dp), navController) }
         composable("itempage") { ItemPage(Modifier.padding(12.dp), navController) }
         composable("paidpage") { PaidPage(Modifier.padding(12.dp), navController) }
+        composable("info") { Info(navController) }
     }
 }
 
@@ -302,5 +300,37 @@ fun PaidPagepreview() {
     }
 }
 
-
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Info(navController: NavController){
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Who are we") },
+                navigationIcon = {
+                    IconButton(onClick = {navController.popBackStack()}) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                }
+            )
+        },
+        content = {
+                paddingValues ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ){
+                Spacer(Modifier.height(30.dp))
+                Image(
+                    painter = painterResource(R.drawable.todo),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(10.dp)
+                )
+                Text("blah blah")
+            }
+        }
+    )
+}
