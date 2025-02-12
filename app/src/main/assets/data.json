@@ -14,5 +14,13 @@
   {
     "name": "shorts",
     "price": 10.49
+  },
+  {
+    "name": "cycling_shirt",
+    "price": 27.99
+  },
+  {
+    "name": "dumbell",
+    "price": 49.99
   }
 ]
