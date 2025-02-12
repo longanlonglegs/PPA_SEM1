@@ -2,12 +2,15 @@ package com.example.ppa_sem1
 
 import android.content.Context
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,18 +22,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -39,6 +49,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentCompositionErrors
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,10 +59,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.motionEventSpy
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -107,6 +125,7 @@ fun MainApp() {
         composable("itempage") { ItemPage(Modifier.padding(12.dp), navController) }
         composable("paidpage") { PaidPage(Modifier.padding(12.dp), navController) }
         composable("info") { Info(navController) }
+        composable("signup") { SignUpPage(navController) }
     }
 }
 
@@ -126,7 +145,9 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically){ Image(painterResource(R.drawable.ic_launcher_background),null, modifier = Modifier.size(70.dp).padding(vertical = 10.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically){ Image(painterResource(R.drawable.ic_launcher_background),null, modifier = Modifier
+                        .size(70.dp)
+                        .padding(vertical = 10.dp))
                         Text("Peak Performance Gear", modifier = Modifier.padding(horizontal = 10.dp))}
                 },
                 colors = TopAppBarColors(
@@ -184,8 +205,9 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
 
                                 Image(
                                     painterResource(imageResourceID), "item 1",
+                                    contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .fillMaxHeight()
+                                        .size(200.dp)
                                 )
                                 Column (Modifier.fillMaxHeight()){
                                     Text(
@@ -210,12 +232,16 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
             }
         },
         bottomBar = {
-            Row (modifier = Modifier.fillMaxWidth().height(70.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
+            Row (modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
                 IconButton(onClick = { navController.navigate("Login") }) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = null,
-                        modifier = Modifier.size(60.dp).padding(horizontal = 7.dp)
+                        modifier = Modifier
+                            .size(60.dp)
+                            .padding(horizontal = 7.dp)
                     )
                 }
                 Text(name)
@@ -223,29 +249,164 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
         },
 
         floatingActionButton = {
-            IconButton(onClick = {},
-                Modifier.background(Color.Cyan))  { Icon((Icons.Default.MailOutline), contentDescription = "LEAVE REVIEW")}
+            FloatingActionButton(onClick = {
+                /*TODO: review page*/
+            },
+                containerColor = Color.Cyan)  { Icon((Icons.Default.MailOutline), contentDescription = "LEAVE REVIEW")}
         }
     )
 }
 
 @Composable
 fun LoginPage(padding: Modifier, navController: NavController) {
-    TODO("Not yet implemented")
+    Column(horizontalAlignment = Alignment.Start) {
+        var username by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
+        var passwordVisible by remember { mutableStateOf(false) }
+        Spacer(modifier = Modifier.height(50.dp))
+        Row (modifier = Modifier.padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically){
+            IconButton(onClick = { navController.navigate("mainpage") }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Text("Login")
+        }
+        TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier.padding(10.dp), singleLine = true)
+        TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier.padding(10.dp), singleLine = true,
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                val image = if (passwordVisible)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+
+                // Please provide localized description for accessibility services
+                val description = if (passwordVisible) "Hide password" else "Show password"
+
+                IconButton(onClick = {passwordVisible = !passwordVisible}){
+                    Icon(imageVector  = image, description)
+                }
+            })
+        Button(onClick = {/*TODO: check user json*/ }) {
+            Text("Login")
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text("Don't have an account? Sign Up here", modifier = Modifier
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { navController.navigate("signup") }
+                )
+            }
+            .padding(10.dp),
+            textDecoration = TextDecoration.Underline)
+    }
+}
+
+@Composable
+fun SignUpPage(navController: NavController) {
+    Column(horizontalAlignment = Alignment.Start) {
+        val context = LocalContext.current
+        var username by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
+        var cpassword by remember { mutableStateOf("") }
+        var passwordVisible by remember { mutableStateOf(false) }
+        var cpasswordVisible by remember { mutableStateOf(false) }
+        Spacer(modifier = Modifier.height(50.dp))
+        Row(modifier = Modifier.padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { navController.navigate("mainpage") }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Text("Sign In")
+        }
+        TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier.padding(10.dp), singleLine = true)
+        TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier.padding(10.dp), singleLine = true,
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                val image = if (passwordVisible)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+
+                // Please provide localized description for accessibility services
+                val description = if (passwordVisible) "Hide password" else "Show password"
+
+                IconButton(onClick = {passwordVisible = !passwordVisible}){
+                    Icon(imageVector  = image, description)
+                }
+            })
+        TextField(label = { Text("Confirm Password")}, value = cpassword, onValueChange = {cpassword=it}, modifier = Modifier.padding(10.dp), singleLine = true,
+            visualTransformation = if (cpasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                val image = if (cpasswordVisible)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+
+                // Please provide localized description for accessibility services
+                val description = if (cpasswordVisible) "Hide password" else "Show password"
+
+                IconButton(onClick = {cpasswordVisible = !cpasswordVisible}){
+                    Icon(imageVector  = image, description)
+                }
+            })
+        Button(onClick = {
+            /*
+                8-20 chars
+                1 lowercase
+                1 uppercase
+                1 number
+                optional special char
+             */
+            if(password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#\$%^&*()_+\\-=\\[\\]{};':\",.<>?/|\\\\`~]{8,20}\$".toRegex())){
+                if(password == cpassword){
+                    /*TODO: add to user json*/
+                }else{
+                    Toast.makeText(context, "Password and confirm do not match",Toast.LENGTH_SHORT).show()
+                }
+            }else{
+                Toast.makeText(context, "Password does not match requirements",Toast.LENGTH_SHORT).show()
+            }
+            }) {
+            Text("Sign Up")
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text("Already have an account? Login here", modifier = Modifier
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { navController.navigate("loginpage") }
+                )
+            }
+            .padding(10.dp),
+            textDecoration = TextDecoration.Underline)
+    }
 }
 
 @Composable
 fun PaymentPage(padding: Modifier, navController: NavController) {
     Scaffold (content = {paddingValues ->
-        Column(Modifier.padding(paddingValues).fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceAround ,content = {
+        Column(Modifier
+            .padding(paddingValues)
+            .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceAround ,content = {
             Text("\$Money", fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
             Text("Thank you for shopping with us!", fontWeight = FontWeight.Bold, fontSize = 20.sp)
             Spacer(Modifier.padding(10.dp))
-            Box(Modifier.fillMaxWidth().background(Color.Cyan).align(Alignment.CenterHorizontally),content = {Text("Pay with card", Modifier.align(
+            Box(Modifier
+                .fillMaxWidth()
+                .background(Color.Cyan)
+                .align(Alignment.CenterHorizontally),content = {Text("Pay with card", Modifier.align(
                 Alignment.Center))})
             TextField(label = { Text("Email")}, value = "", onValueChange = {})
             TextField(label = { Text("Card Number")}, value = "", onValueChange = {})
-            Row (Modifier.fillMaxWidth().padding(5.dp), horizontalArrangement = Arrangement.Absolute.SpaceAround) {
+            Row (Modifier
+                .fillMaxWidth()
+                .padding(5.dp), horizontalArrangement = Arrangement.Absolute.SpaceAround) {
                 TextField(label = { Text("MM/YY") }, value = "", onValueChange = {})
                 Spacer(Modifier.padding(5.dp))
                 TextField(label = { Text("CVC") }, value = "", onValueChange = {})
