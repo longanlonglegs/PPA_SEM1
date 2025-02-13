@@ -80,6 +80,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.ppa_sem1.ui.theme.PPA_SEM1Theme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.Charset
@@ -97,6 +100,42 @@ class MainActivity : ComponentActivity() {
 }
 
 data class clothes(val name: String, val price: Double)
+data class users(val name: String, val password: String)
+
+// Function to write JSON to a file
+fun writeJsonToFile(context: Context, data: List<users>, filename: String) {
+    val gson = Gson()
+    val jsonData = gson.toJson(data)  // Serialize the MyData object to JSON
+
+    try {
+        val fileOutputStream: FileOutputStream = context.openFileOutput(filename, Context.MODE_PRIVATE)
+        fileOutputStream.write(jsonData.toByteArray())
+        fileOutputStream.close()
+    } catch (e: IOException) {
+        e.printStackTrace()
+    }
+}
+
+@Composable
+// Function to read JSON from a file and deserialize it into a list of `users`
+fun readJsonFromFile(context: Context, filename: String): List<users> {
+
+    val context = LocalContext.current
+
+    // Open the file input stream
+    val fileInputStream: FileInputStream = context.openFileInput(filename)
+
+    // Read the file content as a string
+    val jsonContent = fileInputStream.bufferedReader().use { it.readText() }
+    fileInputStream.close()
+
+    // Create Gson object
+    val gson = Gson()
+
+    // Use TypeToken to properly deserialize the generic List<users>
+    val listType = object : TypeToken<List<users>>() {}.type
+    return gson.fromJson(jsonContent, listType)  // Deserialize JSON back into List<users>
+}
 
 @Composable
 fun parseJsonList(json: String): List<clothes> {
@@ -114,6 +153,7 @@ fun readJsonFromAssets(context: Context): String {
     val inputStreamReader = InputStreamReader(inputStream, Charset.defaultCharset())
     return inputStreamReader.readText()
 }
+
 
 @Composable
 fun MainApp() {
@@ -260,9 +300,15 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
 @Composable
 fun LoginPage(padding: Modifier, navController: NavController) {
     Column(horizontalAlignment = Alignment.Start) {
+        var context = LocalContext.current
+        var state by remember { mutableStateOf(false) }
         var username by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
+        var userList by remember { mutableStateOf((listOf(users("test", "pw")))) }
+        writeJsonToFile(context, listOf(users("testing", "pw")), "users.json")
+        userList = readJsonFromFile(context, "users.json")
+        
         Spacer(modifier = Modifier.height(50.dp))
         Row (modifier = Modifier.padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically){
             IconButton(onClick = { navController.navigate("mainpage") }) {
@@ -290,7 +336,20 @@ fun LoginPage(padding: Modifier, navController: NavController) {
                     Icon(imageVector  = image, description)
                 }
             })
-        Button(onClick = {/*TODO: check user json*/ }) {
+        Button(onClick = {
+            for (user in userList) {
+                if (user == users(username, password)) {
+                    navController.navigate("mainpage")
+                    Toast.makeText(context, "Logged in!", Toast.LENGTH_SHORT).show()
+                    state = !state
+                }
+
+                if (!state) {
+                    Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT).show()
+                    state = !state
+                }
+            }
+        }) {
             Text("Login")
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -314,6 +373,10 @@ fun SignUpPage(navController: NavController) {
         var cpassword by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
         var cpasswordVisible by remember { mutableStateOf(false) }
+        var userList by remember { mutableStateOf((listOf(users("test", "pw")))) }
+        writeJsonToFile(context, listOf(users("testing", "pw")), "users.json")
+        userList = readJsonFromFile(context, "users.json")
+
         Spacer(modifier = Modifier.height(50.dp))
         Row(modifier = Modifier.padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { navController.navigate("mainpage") }) {
@@ -366,7 +429,9 @@ fun SignUpPage(navController: NavController) {
              */
             if(password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#\$%^&*()_+\\-=\\[\\]{};':\",.<>?/|\\\\`~]{8,20}\$".toRegex())){
                 if(password == cpassword){
-                    /*TODO: add to user json*/
+                    userList += users(username, password)
+                    writeJsonToFile(context, userList, "users.json")
+                    navController.navigate("mainpage")
                 }else{
                     Toast.makeText(context, "Password and confirm do not match",Toast.LENGTH_SHORT).show()
                 }
@@ -512,6 +577,15 @@ fun PaidPagepreview() {
     PPA_SEM1Theme {
         val navController = rememberNavController()
         PaidPage(Modifier.padding(12.dp), navController)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SignUppreview() {
+    PPA_SEM1Theme {
+        val navController = rememberNavController()
+        SignUpPage(navController)
     }
 }
 
