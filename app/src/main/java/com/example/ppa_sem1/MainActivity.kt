@@ -24,15 +24,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -49,6 +54,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.currentCompositionErrors
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +69,7 @@ import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -77,9 +84,12 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import com.example.ppa_sem1.MainActivity.Companion.item
 import com.example.ppa_sem1.ui.theme.PPA_SEM1Theme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.serialization.Serializable
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
@@ -88,11 +98,17 @@ import java.io.InputStreamReader
 import java.nio.charset.Charset
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        lateinit var item : MutableState<List<String>>
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             PPA_SEM1Theme {
+                item = remember { mutableStateOf(listOf("")) }
                 MainApp()
             }
         }
@@ -154,7 +170,6 @@ fun readJsonFromAssets(context: Context): String {
     return inputStreamReader.readText()
 }
 
-
 @Composable
 fun MainApp() {
     val navController = rememberNavController()
@@ -162,7 +177,7 @@ fun MainApp() {
         composable("mainpage") {MainPage(Modifier.padding(12.dp), navController, "cool cs kids")}
         composable("loginpage") { LoginPage(Modifier.padding(12.dp), navController) }
         composable("paymentpage") { PaymentPage(Modifier.padding(12.dp), navController) }
-        composable("itempage") { ItemPage(Modifier.padding(12.dp), navController) }
+        composable("itempage") { ItemPage(Modifier.padding(12.dp), navController, item) }
         composable("paidpage") { PaidPage(Modifier.padding(12.dp), navController) }
         composable("info") { Info(navController) }
         composable("signup") { SignUpPage(navController) }
@@ -180,6 +195,8 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
     var itemList by remember { mutableStateOf(listOf(clothes("testing", 30.00)))}
 
     itemList = parseJsonList(readJsonFromAssets(context))
+
+    var rating by remember { mutableStateOf(4f) } //default rating will be 1
 
     Scaffold (
         topBar = {
@@ -215,6 +232,15 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
                     .fillMaxWidth()
                     .background(Color.LightGray)
             ) {
+                item {
+                    Text("Where Performance Meets Peak",
+                        fontWeight = FontWeight.ExtraBold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                    )
+                }
                 stickyHeader {
                     TextField(value = search, onValueChange = {search = it},
                         modifier = Modifier.fillMaxWidth(),
@@ -224,7 +250,12 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
                 for (element in itemList) {
                     item {
                         ElevatedCard(
-                            onClick = {navController.navigate("itempage")},
+                            onClick = {
+
+                                item.value = listOf(element.name, element.price.toString())
+
+                                navController.navigate("itempage")
+                                      },
                             elevation = CardDefaults.cardElevation(
                                 defaultElevation = 6.dp
                             ),
@@ -248,6 +279,8 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .size(200.dp)
+                                        .background(Color.White)
+                                        .padding(20.dp)
                                 )
                                 Column (Modifier.fillMaxHeight()){
                                     Text(
@@ -255,6 +288,8 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
                                         modifier = Modifier
                                             .padding(16.dp),
                                         textAlign = TextAlign.Center,
+                                        fontSize = 40.sp,
+                                        fontWeight = FontWeight.ExtraBold
                                     )
 
                                     Text(
@@ -262,6 +297,14 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
                                         modifier = Modifier
                                             .padding(16.dp),
                                         textAlign = TextAlign.Center,
+                                    )
+
+                                    StarRatingBar(
+                                        maxStars = 5,
+                                        rating = rating,
+                                        onRatingChanged = {
+                                            rating = it
+                                        }
                                     )
                                 }
                             }
@@ -274,23 +317,32 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
         bottomBar = {
             Row (modifier = Modifier
                 .fillMaxWidth()
-                .height(70.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
-                IconButton(onClick = { navController.navigate("Login") }) {
+                .height(70.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures (
+                        onTap = {
+                            navController.navigate("info")
+                        }
+                    )
+                }
+
+                , horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
+                IconButton(onClick = {}) {
                     Icon(
-                        imageVector = Icons.Default.AccountCircle,
+                        imageVector = Icons.Default.Info,
                         contentDescription = null,
                         modifier = Modifier
                             .size(60.dp)
                             .padding(horizontal = 7.dp)
                     )
                 }
-                Text(name)
+                Text("Find out more about what we do!")
             }
         },
 
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                /*TODO: review page*/
+                /*TODO: contact customer support*/
             },
                 containerColor = Color.Cyan)  { Icon((Icons.Default.MailOutline), contentDescription = "LEAVE REVIEW")}
         }
@@ -320,6 +372,12 @@ fun LoginPage(padding: Modifier, navController: NavController) {
             Spacer(modifier = Modifier.width(10.dp))
             Text("Login")
         }
+        Text("Hi there",
+            Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            fontSize = 30.sp)
+
         TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier.padding(10.dp), singleLine = true)
         TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier.padding(10.dp), singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -493,7 +551,7 @@ fun PaidPage(padding: Modifier, navController: NavController) {
 }
 
 @Composable
-fun ItemPage(modifier: Modifier, navController: NavController) {
+fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>) {
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -503,6 +561,9 @@ fun ItemPage(modifier: Modifier, navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.padding(15.dp))
+
+        val imageResourceID = LocalContext.current.resources.getIdentifier("", "drawable", LocalContext.current.packageName)
+
         Image(
             painter = painterResource(R.drawable.ic_launcher_background),
             contentDescription = "Item",
@@ -532,6 +593,45 @@ fun ItemPage(modifier: Modifier, navController: NavController) {
                 Text(text = "Add to Cart")
             }
         )
+    }
+}
+
+@Composable
+fun StarRatingBar(
+    maxStars: Int = 5,
+    rating: Float,
+    onRatingChanged: (Float) -> Unit
+) {
+    val density = LocalDensity.current.density
+    val starSize = (12f * density).dp
+    val starSpacing = (0.5f * density).dp
+
+    Row(
+        modifier = Modifier.selectableGroup(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        for (i in 1..maxStars) {
+            val isSelected = i <= rating
+            val icon = if (isSelected) Icons.Filled.Star else Icons.Default.Star
+            val iconTintColor = if (isSelected) Color(0xFFFFC700) else Color(0x20FFFFFF)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTintColor,
+                modifier = Modifier
+                    .selectable(
+                        selected = isSelected,
+                        onClick = {
+                            onRatingChanged(i.toFloat())
+                        }
+                    )
+                    .width(starSize).height(starSize)
+            )
+
+            if (i < maxStars) {
+                Spacer(modifier = Modifier.width(starSpacing))
+            }
+        }
     }
 }
 
@@ -567,7 +667,7 @@ fun PaymentPagepreview() {
 fun ItemPagepreview() {
     PPA_SEM1Theme {
         val navController = rememberNavController()
-        ItemPage(Modifier.padding(12.dp), navController)
+        ItemPage(Modifier.padding(12.dp), navController, item)
     }
 }
 
@@ -579,6 +679,16 @@ fun PaidPagepreview() {
         PaidPage(Modifier.padding(12.dp), navController)
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun Infopreview() {
+    PPA_SEM1Theme {
+        val navController = rememberNavController()
+        Info(navController)
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
