@@ -43,6 +43,8 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -81,9 +83,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import com.example.ppa_sem1.MainActivity.Companion.item
 import com.example.ppa_sem1.ui.theme.PPA_SEM1Theme
@@ -177,7 +181,19 @@ fun MainApp() {
         composable("mainpage") {MainPage(Modifier.padding(12.dp), navController, "cool cs kids")}
         composable("loginpage") { LoginPage(Modifier.padding(12.dp), navController) }
         composable("paymentpage") { PaymentPage(Modifier.padding(12.dp), navController) }
-        composable("itempage") { ItemPage(Modifier.padding(12.dp), navController, item) }
+        composable("itempage/{name}/{price}/{id}",
+            listOf(navArgument("name"){NavType.StringType},
+                navArgument("price"){NavType.FloatType},
+                navArgument("id"){NavType.IntType})
+        ) {backStackEntry->
+            val name = backStackEntry.arguments?.getString("name")
+            val price = backStackEntry.arguments?.getFloat("price")
+            val id = backStackEntry.arguments?.getInt("id")
+            if (name != null && price != null && id != null) {
+                ItemPage(Modifier.padding(12.dp), navController, item, name, price, id)
+            //call navController.navigate("itempage/${name}/${price}/${id}")
+            }
+        }
         composable("paidpage") { PaidPage(Modifier.padding(12.dp), navController) }
         composable("info") { Info(navController) }
         composable("signup") { SignUpPage(navController) }
@@ -314,37 +330,32 @@ fun MainPage(padding: Modifier, navController: NavController, name: String) {
                 }
             }
         },
-        bottomBar = {
-            Row (modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures (
-                        onTap = {
-                            navController.navigate("info")
-                        }
-                    )
-                }
-
-                , horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(60.dp)
-                            .padding(horizontal = 7.dp)
-                    )
-                }
-                Text("Find out more about what we do!")
-            }
-        },
 
         floatingActionButton = {
+            var expanded by remember { mutableStateOf(false) }
             FloatingActionButton(onClick = {
                 /*TODO: contact customer support*/
+                expanded = !expanded
             },
-                containerColor = Color.Cyan)  { Icon((Icons.Default.MailOutline), contentDescription = "LEAVE REVIEW")}
+                containerColor = Color.Black)  { Icon((Icons.Filled.Info), contentDescription = "LEAVE REVIEW")}
+            Box(
+                modifier = Modifier
+                    .padding(16.dp)
+            ) {
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Find out more about us!") },
+                        onClick = { navController.navigate("info")}
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Contact Us") },
+                        onClick = { /* Do something... */ }
+                    )
+                }
+            }
         }
     )
 }
@@ -551,7 +562,7 @@ fun PaidPage(padding: Modifier, navController: NavController) {
 }
 
 @Composable
-fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>) {
+fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, price:Float, id:Int) {
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -666,8 +677,11 @@ fun PaymentPagepreview() {
 @Composable
 fun ItemPagepreview() {
     PPA_SEM1Theme {
+        val name:String =""
+        val price:Float =0f
+        val id:Int=0
         val navController = rememberNavController()
-        ItemPage(Modifier.padding(12.dp), navController, item)
+        ItemPage(Modifier.padding(12.dp), navController, item,name,price,id)
     }
 }
 
