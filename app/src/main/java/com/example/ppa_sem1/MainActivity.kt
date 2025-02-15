@@ -52,7 +52,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -231,11 +230,11 @@ fun MainApp() {
         composable("itempage/{name}/{price}",
             listOf(
                 navArgument("name") { NavType.StringType },
-                navArgument("price") { NavType.FloatType },
+                navArgument("price") { NavType.StringType },
             )
         ) {backStackEntry->
             val name = backStackEntry.arguments?.getString("name")
-            val price = backStackEntry.arguments?.getDouble("price")
+            val price = backStackEntry.arguments?.getString("price")
             if (name != null && price != null) {
                 ItemPage(Modifier.padding(12.dp), navController, item, name, price)
                 //call navController.navigate("itempage/${name}/${price}/")
@@ -381,15 +380,19 @@ fun MainPage(navController: NavController, name: String) {
                         placeholder = { Text("Search by keyword")},
                         leadingIcon = {Icon(Icons.Default.Search, contentDescription = "Search")})
                 }
-                for ((index, element) in itemList.withIndex()) {
+
+                val filteredList = itemList.filter { element ->
+                    element.name.contains(search, ignoreCase = true)
+                }
+
+                for ((index, element) in filteredList.withIndex()) {
                     item {
-                        Log.d("valueCheck","${element.price}")
                         val imageResourceID = LocalContext.current.resources.getIdentifier(element.name, "drawable", LocalContext.current.packageName)
                         ElevatedCard(
                             onClick = {
 
                                 item.value = listOf(element.name, element.price.toString())
-
+                                Log.d("valueCheck","${element.price}")
                                 navController.navigate("itempage/${element.name}/${element.price}")
                             },
                             elevation = CardDefaults.cardElevation(
@@ -691,10 +694,11 @@ fun PaidPage(padding: Modifier, navController: NavController) {
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, price: Double) {
+fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, priceS: String) {
     val context = LocalContext.current
     var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0, ""))) }
     var quantity by remember { mutableStateOf(1) }
+    val price = priceS.toDouble()
     var size by remember { mutableStateOf("") }
     var state by remember { mutableStateOf(1) }
 
@@ -932,7 +936,7 @@ fun PaymentPagepreview() {
 fun ItemPagepreview() {
     PPA_SEM1Theme {
         val name:String ="shorts"
-        val price:Double = 0.0
+        val price:String = ""
         val navController = rememberNavController()
         ItemPage(Modifier.padding(12.dp), navController, item, name,price)
     }
