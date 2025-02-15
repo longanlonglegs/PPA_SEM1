@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,9 +29,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -40,7 +36,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -89,7 +84,6 @@ import com.example.ppa_sem1.MainActivity.Companion.item
 import com.example.ppa_sem1.ui.theme.PPA_SEM1Theme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
@@ -115,7 +109,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class buyingItem(val name: String, val price: Double, val quantity: Int)
 data class clothes(val name: String, val price: Double)
 data class users(val name: String, val password: String)
 
@@ -133,27 +126,11 @@ fun writeJsonToFile(context: Context, data: List<users>, filename: String) {
     }
 }
 
-// Function to write JSON to a file
-fun writeBuyingJsonToFile(context: Context, data: List<buyingItem>, filename: String) {
-    val gson = Gson()
-    val jsonData = gson.toJson(data)  // Serialize the MyData object to JSON
-
-    try {
-        val fileOutputStream: FileOutputStream = context.openFileOutput(filename, Context.MODE_PRIVATE)
-        fileOutputStream.write(jsonData.toByteArray())
-        fileOutputStream.close()
-    } catch (e: IOException) {
-        e.printStackTrace()
-    }
-}
-
 @Composable
 // Function to read JSON from a file and deserialize it into a list of `users`
-fun readJsonFromFile(context: Context, filename: String): ArrayList<users> {
+fun readJsonFromFile(context: Context, filename: String): List<users> {
 
-    val file = File(context.filesDir, "users.json")
-
-    if (!file.exists()) file.createNewFile()
+    val context = LocalContext.current
 
     // Open the file input stream
     val fileInputStream: FileInputStream = context.openFileInput(filename)
@@ -167,31 +144,6 @@ fun readJsonFromFile(context: Context, filename: String): ArrayList<users> {
 
     // Use TypeToken to properly deserialize the generic List<users>
     val listType = object : TypeToken<List<users>>() {}.type
-    return gson.fromJson(jsonContent, listType)  // Deserialize JSON back into List<users>
-}
-
-@Composable
-// Function to read JSON from a file and deserialize it into a list of `users`
-fun readBuyingJsonFromFile(context: Context, filename: String): ArrayList<buyingItem> {
-
-    val file = File(context.filesDir, "buying.json")
-
-    if (!file.exists()) {file.createNewFile()}
-
-    if (file.length() == 0L) writeBuyingJsonToFile(LocalContext.current, arrayListOf(buyingItem("", 0.0, 0)) ,"buying.json")
-
-    // Open the file input stream
-    val fileInputStream: FileInputStream = context.openFileInput(filename)
-
-    // Read the file content as a string
-    val jsonContent = fileInputStream.bufferedReader().use { it.readText() }
-    fileInputStream.close()
-
-    // Create Gson object
-    val gson = Gson()
-
-    // Use TypeToken to properly deserialize the generic List<users>
-    val listType = object : TypeToken<List<buyingItem>>() {}.type
     return gson.fromJson(jsonContent, listType)  // Deserialize JSON back into List<users>
 }
 
@@ -236,38 +188,7 @@ fun MainApp() {
         composable("info") { Info(navController) }
         composable("signup") { SignUpPage(navController) }
         composable("contact") { Contact(navController)  }
-        composable("shoppingcart") {ShoppingCart(navController)}
     }
-}
-
-@Composable
-fun ShoppingCart(navController: NavController) {
-
-    var context = LocalContext.current
-    var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
-    cart = readBuyingJsonFromFile(context, "buying.json")
-
-    Column (Modifier.fillMaxSize()){
-        LazyColumn (){
-            for (item in cart) {
-                item {
-                    Card (Modifier.fillMaxSize()){
-                        Row {
-                            Column (Modifier.fillMaxSize()){
-                                Text(item.name)
-                                Text(item.price.toString())
-                                Text(item.quantity.toString())
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        Button(onClick ={
-            navController.navigate("paymentpage")
-        }, Modifier.fillMaxWidth().defaultMinSize(60.dp)) { Text("pay now") }
-    }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -302,8 +223,8 @@ fun MainPage(navController: NavController, name: String) {
                 ),
                 actions = {
                     IconButton(onClick = {
-                        navController.navigate("shoppingcart")
-                    }) {Icon(Icons.Default.ShoppingCart, contentDescription = "shopping cart")}
+                        navController.navigate("paymentpage")
+                    }) {Icon(Icons.Default.ShoppingCart, contentDescription = "Payment")}
                     IconButton(onClick = {
                         navController.navigate("loginpage")
                     }) {Icon(Icons.Default.AccountCircle, contentDescription = "login")}
@@ -436,7 +357,8 @@ fun LoginPage(navController: NavController) {
         var username by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
-        var userList by remember { mutableStateOf((arrayListOf(users("test", "pw")))) }
+        var userList by remember { mutableStateOf((listOf(users("test", "pw")))) }
+        writeJsonToFile(context, listOf(users("testing", "pw")), "users.json")
         userList = readJsonFromFile(context, "users.json")
         
         Spacer(modifier = Modifier.height(50.dp))
@@ -479,14 +401,12 @@ fun LoginPage(navController: NavController) {
                     Toast.makeText(context, "Logged in!", Toast.LENGTH_SHORT).show()
                     state = !state
                 }
+
+                if (!state) {
+                    Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT).show()
+                    state = !state
+                }
             }
-
-            if (!state) {
-                Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT).show()
-            }
-
-            state = false
-
         }) {
             Text("Login")
         }
@@ -511,7 +431,8 @@ fun SignUpPage(navController: NavController) {
         var cpassword by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
         var cpasswordVisible by remember { mutableStateOf(false) }
-        var userList by remember { mutableStateOf((arrayListOf(users("test", "pw")))) }
+        var userList by remember { mutableStateOf((listOf(users("test", "pw")))) }
+        writeJsonToFile(context, listOf(users("testing", "pw")), "users.json")
         userList = readJsonFromFile(context, "users.json")
 
         Spacer(modifier = Modifier.height(50.dp))
@@ -566,10 +487,9 @@ fun SignUpPage(navController: NavController) {
              */
             if(password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#\$%^&*()_+\\-=\\[\\]{};':\",.<>?/|\\\\`~]{8,20}\$".toRegex())){
                 if(password == cpassword){
-                    userList.add(users(username, password))
+                    userList += users(username, password)
                     writeJsonToFile(context, userList, "users.json")
                     navController.navigate("mainpage")
-                    Toast.makeText(context, "Sign up successful!", Toast.LENGTH_SHORT).show()
                 }else{
                     Toast.makeText(context, "Password and confirm do not match",Toast.LENGTH_SHORT).show()
                 }
@@ -632,12 +552,6 @@ fun PaidPage(padding: Modifier, navController: NavController) {
 
 @Composable
 fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, price: Double, id:Int) {
-    val context = LocalContext.current
-    var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
-    var quantity by remember { mutableStateOf(1) }
-
-    cart = readBuyingJsonFromFile(context, "buying.json")
-
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -665,22 +579,11 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
         )
 
         Spacer(modifier = Modifier.padding(15.dp))
-
-        Row {
-            Text(text = "QUANTITY ")
-            Button(onClick = {quantity += 1}) { Icon(Icons.Default.ArrowUpward, "add")}
-            Button(onClick = {quantity += -1}) { Icon(Icons.Default.ArrowDownward, "minus")}
-        }
-
+        Text(text = "QUANTITY ")
 
         Spacer(modifier = Modifier.padding(15.dp))
         Button(
-            onClick = {
-                cart += buyingItem(name, price, quantity)
-                writeBuyingJsonToFile(context, cart, "buying.json")
-                navController.navigate("mainpage")
-                Toast.makeText(context, "Item added to cart!", Toast.LENGTH_SHORT)
-            },
+            onClick = {},
             modifier = Modifier
                 .size(width = 150.dp, height = 50.dp),
             content = {
@@ -798,11 +701,11 @@ fun PaymentPagepreview() {
 @Composable
 fun ItemPagepreview() {
     PPA_SEM1Theme {
-        val name:String ="shorts"
+        val name:String =""
         val price:Double = 0.0
         val id:Int=0
         val navController = rememberNavController()
-        ItemPage(Modifier.padding(12.dp), navController, item, name,price,id)
+        ItemPage(Modifier.padding(12.dp), navController, item,name,price,id)
     }
 }
 
@@ -833,16 +736,6 @@ fun SignUppreview() {
         SignUpPage(navController)
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun ShoppingCartpreview() {
-    PPA_SEM1Theme {
-        val navController = rememberNavController()
-        ShoppingCart(navController)
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
