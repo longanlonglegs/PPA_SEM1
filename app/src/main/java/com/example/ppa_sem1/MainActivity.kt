@@ -355,6 +355,7 @@ fun MainPage(navController: NavController, name: String) {
                 }
                 for ((index, element) in itemList.withIndex()) {
                     item {
+                        Log.d("valueCheck","${element.price}")
                         val imageResourceID = LocalContext.current.resources.getIdentifier(element.name, "drawable", LocalContext.current.packageName)
                         ElevatedCard(
                             onClick = {
@@ -396,14 +397,12 @@ fun MainPage(navController: NavController, name: String) {
                                         fontSize = 40.sp,
                                         fontWeight = FontWeight.ExtraBold
                                     )
-                                    Log.d("valueCheck","${element.price}")
                                     Text(
                                         text = "\$${element.price}",
                                         modifier = Modifier
                                             .padding(16.dp),
                                         textAlign = TextAlign.Center,
                                     )
-                                    Log.d("valueCheck1","${element.price}")
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
                                         RatingBar(
                                             value = rating[index],
@@ -669,7 +668,6 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
     var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
     var quantity by remember { mutableStateOf(1) }
 
-    Log.d("CHECK", "$price")
     cart = readBuyingJsonFromFile(context, "buying.json")
     Scaffold (
         topBar = {
