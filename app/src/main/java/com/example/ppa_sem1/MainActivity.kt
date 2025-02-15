@@ -566,7 +566,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
     ) {
         Spacer(modifier = Modifier.padding(15.dp))
         Image(
-            painter = painterResource(id),
+            painter = painterResource(LocalContext.current.resources.getIdentifier(name, "drawable", LocalContext.current.packageName)),
             contentDescription = "Item",
             modifier = Modifier
                 .size(300.dp)
