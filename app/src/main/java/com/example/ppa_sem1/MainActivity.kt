@@ -228,8 +228,8 @@ fun MainApp() {
             val price = backStackEntry.arguments?.getDouble("price")
             val id = backStackEntry.arguments?.getInt("id")
             if (name != null && price != null && id != null) {
-                ItemPage(Modifier.padding(12.dp), navController, item, name, price, id)
-                //call navController.navigate("itempage/${name}/${price}/${id}")
+                ItemPage(Modifier.padding(12.dp), navController, name, price)
+                //call navController.navigate("itempage/${name}/${price}")
             }
         }
         composable("paidpage") { PaidPage(Modifier.padding(12.dp), navController) }
@@ -645,7 +645,7 @@ fun PaidPage(padding: Modifier, navController: NavController) {
 }
 
 @Composable
-fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, price: Double, id:Int) {
+fun ItemPage(modifier: Modifier, navController: NavController, name:String, price: Double) {
     val context = LocalContext.current
     var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
     var quantity by remember { mutableStateOf(1) }
@@ -654,10 +654,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
 
     Column (
         modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                this.alpha = 0.5f
-            },
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.padding(15.dp))
@@ -682,6 +679,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
 
         Row {
             Text(text = "QUANTITY ")
+            Text(quantity.toString())
             Button(onClick = {quantity += 1}) { Icon(Icons.Default.ArrowUpward, "add")}
             Button(onClick = {quantity += -1}) { Icon(Icons.Default.ArrowDownward, "minus")}
         }
@@ -816,7 +814,7 @@ fun ItemPagepreview() {
         val price:Double = 0.0
         val id:Int=0
         val navController = rememberNavController()
-        ItemPage(Modifier.padding(12.dp), navController, item, name,price,id)
+        ItemPage(Modifier.padding(12.dp), navController, name, price)
     }
 }
 
