@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Home
@@ -241,40 +242,58 @@ fun MainApp() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingCart(navController: NavController) {
 
     var context = LocalContext.current
-    var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
+    var cart by remember { mutableStateOf(arrayListOf(buyingItem("logo", 0.0, 0))) }
     cart = readBuyingJsonFromFile(context, "buying.json")
 
-    Column (Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally){
-        LazyColumn (Modifier.height(150.dp)){
-            for (item in cart) {
-                item {
-                    Card (Modifier.fillMaxSize()){
-                        Row {
-                            Column (Modifier.fillMaxSize()){
-                                Text(item.name)
-                                Text(item.price.toString())
-                                Text(item.quantity.toString())
+    Scaffold (
+        topBar = {
+            TopAppBar(title = { Text("Shopping Cart")},
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navController.navigate("mainpage")
+                    }){Icon(Icons.Default.ArrowBack, "")}
+                })
+        },
+        content = {paddingValues ->
+
+            Column (Modifier.fillMaxSize().padding(paddingValues), horizontalAlignment = Alignment.CenterHorizontally){
+                LazyColumn (Modifier.height(400.dp), verticalArrangement = Arrangement.spacedBy(20.dp), horizontalAlignment = Alignment.CenterHorizontally){
+                    for (item in cart) {
+                        item {
+                            Card (Modifier.fillMaxSize()){
+                                Row {
+
+                                    Image(painterResource(R.drawable.ic_launcher_background), "")
+
+                                    Column (Modifier.fillMaxSize()){
+                                        Text(item.name)
+                                        Text(item.price.toString())
+                                        Text(item.quantity.toString())
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
-        }
 
-        Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)){
-            Button(onClick = {
-                navController.navigate("paymentpage")
-            }, ) { Text("pay now") }
-            Button(onClick = {
-                cart = arrayListOf(buyingItem("", 0.0, 0))
-                writeBuyingJsonToFile(context, cart, "buying.json")
-            }, ) { Text("Clear cart") }
+                Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)){
+                    Button(onClick = {
+                        navController.navigate("paymentpage")
+                    }, ) { Text("pay now") }
+                    Button(onClick = {
+                        cart = arrayListOf(buyingItem("", 0.0, 0))
+                        writeBuyingJsonToFile(context, cart, "buying.json")
+                    }, ) { Text("Clear cart") }
+                }
+            }
+
         }
-    }
+    )
 
 }
 
