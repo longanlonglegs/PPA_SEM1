@@ -60,6 +60,7 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -98,6 +99,11 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.Charset
+import androidx.media3.common.util.Log
+import androidx.media3.common.util.UnstableApi
+import com.gowtham.ratingbar.RatingBar
+import com.gowtham.ratingbar.RatingBarStyle
+import com.gowtham.ratingbar.StepSize
 
 class MainActivity : ComponentActivity() {
 
@@ -221,17 +227,17 @@ fun MainApp() {
         composable("mainpage") {MainPage(navController, "cool cs kids")}
         composable("loginpage") { LoginPage(navController) }
         composable("paymentpage") { PaymentPage(navController) }
-        composable("itempage/{name}/{price}/{id}",
-            listOf(navArgument("name"){NavType.StringType},
-                navArgument("price"){NavType.FloatType},
-                navArgument("id"){NavType.IntType})
+        composable("itempage/{name}/{price}",
+            listOf(
+                navArgument("name") { NavType.StringType },
+                navArgument("price") { NavType.FloatType },
+            )
         ) {backStackEntry->
             val name = backStackEntry.arguments?.getString("name")
             val price = backStackEntry.arguments?.getDouble("price")
-            val id = backStackEntry.arguments?.getInt("id")
-            if (name != null && price != null && id != null) {
-                ItemPage(Modifier.padding(12.dp), navController, name, price)
-                //call navController.navigate("itempage/${name}/${price}")
+            if (name != null && price != null) {
+                ItemPage(Modifier.padding(12.dp), navController, item, name, price)
+                //call navController.navigate("itempage/${name}/${price}/")
             }
         }
         composable("paidpage") { PaidPage(Modifier.padding(12.dp), navController) }
@@ -281,22 +287,24 @@ fun ShoppingCart(navController: NavController) {
                     }
                 }
 
-                Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)){
-                    Button(onClick = {
-                        navController.navigate("paymentpage")
-                    }, ) { Text("pay now") }
-                    Button(onClick = {
-                        cart = arrayListOf(buyingItem("", 0.0, 0))
-                        writeBuyingJsonToFile(context, cart, "buying.json")
-                    }, ) { Text("Clear cart") }
-                }
-            }
-
+        Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)){
+            Button(
+                onClick = {
+                    navController.navigate("paymentpage")
+                },
+            ) { Text("pay now") }
+            Button(
+                onClick = {
+                    cart = arrayListOf(buyingItem("", 0.0, 0))
+                    writeBuyingJsonToFile(context, cart, "buying.json")
+                },
+            ) { Text("Clear cart") }
         }
-    )
+    }
 
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainPage(navController: NavController, name: String) {
@@ -309,7 +317,7 @@ fun MainPage(navController: NavController, name: String) {
 
     itemList = parseJsonList(readJsonFromAssets(context))
 
-    var rating by remember { mutableStateOf(4f) } //default rating will be 1
+    var rating = remember { mutableStateListOf<Float>().apply { addAll(List(itemList.size){0f}) } } //default rating will be 1
 
     Scaffold (
         topBar = {
@@ -361,15 +369,16 @@ fun MainPage(navController: NavController, name: String) {
                         placeholder = { Text("Search by keyword")},
                         leadingIcon = {Icon(Icons.Default.Search, contentDescription = "Search")})
                 }
-                for (element in itemList) {
+                for ((index, element) in itemList.withIndex()) {
                     item {
+                        Log.d("valueCheck","${element.price}")
                         val imageResourceID = LocalContext.current.resources.getIdentifier(element.name, "drawable", LocalContext.current.packageName)
                         ElevatedCard(
                             onClick = {
 
                                 item.value = listOf(element.name, element.price.toString())
 
-                                navController.navigate("itempage/${element.name}/${element.price}/${imageResourceID}")
+                                navController.navigate("itempage/${element.name}/${element.price}")
                             },
                             elevation = CardDefaults.cardElevation(
                                 defaultElevation = 6.dp
@@ -390,7 +399,8 @@ fun MainPage(navController: NavController, name: String) {
                                     painterResource(imageResourceID), "item 1",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .size(200.dp)
+                                        .width(150.dp)
+                                        .fillMaxHeight()
                                         .background(Color.White)
                                         .padding(20.dp)
                                 )
@@ -403,21 +413,22 @@ fun MainPage(navController: NavController, name: String) {
                                         fontSize = 40.sp,
                                         fontWeight = FontWeight.ExtraBold
                                     )
-
                                     Text(
                                         text = "\$${element.price}",
                                         modifier = Modifier
                                             .padding(16.dp),
                                         textAlign = TextAlign.Center,
                                     )
-
-                                    StarRatingBar(
-                                        maxStars = 5,
-                                        rating = rating,
-                                        onRatingChanged = {
-                                            rating = it
-                                        }
-                                    )
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                                        RatingBar(
+                                            value = rating[index],
+                                            style = RatingBarStyle.Fill(),
+                                            onValueChange = {
+                                                rating[index] = it
+                                            },
+                                            stepSize = StepSize.HALF
+                                        ){}
+                                    }
                                 }
                             }
 
@@ -665,62 +676,103 @@ fun PaidPage(padding: Modifier, navController: NavController) {
     })
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ItemPage(modifier: Modifier, navController: NavController, name:String, price: Double) {
+fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, price: Double) {
     val context = LocalContext.current
     var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
     var quantity by remember { mutableStateOf(1) }
 
     cart = readBuyingJsonFromFile(context, "buying.json")
+    Scaffold (
+        topBar = {
+            TopAppBar(
+                title = {Text("Details")},
+                navigationIcon = {
+                    IconButton(onClick = {navController.popBackStack()}) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
+                        )
+                    }
+                }
+            )
+        },
+        content = {
+            paddingValues->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.padding(15.dp))
+                Image(
+                    painter = painterResource(
+                        LocalContext.current.resources.getIdentifier(
+                            name,
+                            "drawable",
+                            LocalContext.current.packageName
+                        )
+                    ),
+                    contentDescription = "Item",
+                    modifier = Modifier
+                        .size(300.dp)
+                )
 
-    Column (
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.padding(15.dp))
-        Image(
-            painter = painterResource(LocalContext.current.resources.getIdentifier(name, "drawable", LocalContext.current.packageName)),
-            contentDescription = "Item",
-            modifier = Modifier
-                .size(300.dp)
-        )
+                Spacer(modifier = Modifier.padding(15.dp))
+                Text(
+                    text = name,
+                    fontWeight = FontWeight.Bold,
+                )
 
-        Spacer(modifier = Modifier.padding(15.dp))
-        Text(text = name,
-            fontWeight = FontWeight.Bold,
-        )
+                Spacer(modifier = Modifier.padding(15.dp))
+                Text(
+                    text = "$$price",
+                    fontWeight = FontWeight.SemiBold
+                )
 
-        Spacer(modifier = Modifier.padding(15.dp))
-        Text(text = "$$price",
-            fontWeight = FontWeight.SemiBold
-        )
+                Spacer(modifier = Modifier.padding(15.dp))
 
-        Spacer(modifier = Modifier.padding(15.dp))
+                Column {
+                    Text(text = "QUANTITY: $quantity")
+                    Row {
+                        Button(onClick = { quantity += 1 }) {
+                            Icon(
+                                Icons.Default.ArrowUpward,
+                                "add"
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Button(onClick = { quantity += -1 }) {
+                            Icon(
+                                Icons.Default.ArrowDownward,
+                                "minus"
+                            )
+                        }
+                    }
 
-        Row {
-            Text(text = "QUANTITY ")
-            Text(quantity.toString())
-            Button(onClick = {quantity += 1}) { Icon(Icons.Default.ArrowUpward, "add")}
-            Button(onClick = {quantity += -1}) { Icon(Icons.Default.ArrowDownward, "minus")}
-        }
+                }
 
 
-        Spacer(modifier = Modifier.padding(15.dp))
-        Button(
-            onClick = {
-                cart += buyingItem(name, price, quantity)
-                writeBuyingJsonToFile(context, cart, "buying.json")
-                navController.navigate("mainpage")
-                Toast.makeText(context, "Item added to cart!", Toast.LENGTH_SHORT)
-            },
-            modifier = Modifier
-                .size(width = 150.dp, height = 50.dp),
-            content = {
-                Text(text = "Add to Cart")
+                Spacer(modifier = Modifier.padding(15.dp))
+                Button(
+                    onClick = {
+                        cart += buyingItem(name, price, quantity)
+                        writeBuyingJsonToFile(context, cart, "buying.json")
+                        navController.navigate("mainpage")
+                        Toast.makeText(context, "Item added to cart!", Toast.LENGTH_SHORT)
+                    },
+                    modifier = Modifier
+                        .size(width = 150.dp, height = 50.dp),
+                    content = {
+                        Text(text = "Add to Cart")
+                    }
+                )
             }
-        )
-    }
+        }
+    )
 }
 
 @Composable
@@ -833,9 +885,8 @@ fun ItemPagepreview() {
     PPA_SEM1Theme {
         val name:String ="shorts"
         val price:Double = 0.0
-        val id:Int=0
         val navController = rememberNavController()
-        ItemPage(Modifier.padding(12.dp), navController, name, price)
+        ItemPage(Modifier.padding(12.dp), navController, item, name,price)
     }
 }
 
