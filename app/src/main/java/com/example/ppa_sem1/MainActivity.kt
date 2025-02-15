@@ -353,7 +353,12 @@ fun MainPage(navController: NavController, name: String) {
                         placeholder = { Text("Search by keyword")},
                         leadingIcon = {Icon(Icons.Default.Search, contentDescription = "Search")})
                 }
-                for ((index, element) in itemList.withIndex()) {
+
+                val filteredList = itemList.filter { element ->
+                    element.name.contains(search, ignoreCase = true)
+                }
+
+                for ((index, element) in filteredList.withIndex()) {
                     item {
                         val imageResourceID = LocalContext.current.resources.getIdentifier(element.name, "drawable", LocalContext.current.packageName)
                         ElevatedCard(
