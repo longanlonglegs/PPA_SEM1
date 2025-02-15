@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -295,7 +296,7 @@ fun MainPage(navController: NavController, name: String) {
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically){ Image(painterResource(R.drawable.ic_launcher_background),null, modifier = Modifier
+                    Row(verticalAlignment = Alignment.CenterVertically){ Image(painterResource(R.drawable.logo),null, modifier = Modifier
                         .size(70.dp)
                         .padding(vertical = 10.dp))
                         Text("Peak Performance Gear", modifier = Modifier.padding(horizontal = 10.dp))}
@@ -638,9 +639,10 @@ fun PaymentPage( navController: NavController) {
 
 @Composable
 fun PaidPage(padding: Modifier, navController: NavController) {
-    Column(Modifier.fillMaxSize(), content = {
-        Text("Thanks for the purchase!\n we hope you enjoy your clothes")
-        Button(onClick = {navController.navigate("mainpage")}) { Text("Home") }
+    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp), content = {
+        Image(painterResource(R.drawable.logo), "logo")
+        Text("Thanks for the shopping with Peak Performance Gear!", fontSize = 50.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 50.sp, textAlign = TextAlign.Center)
+        Button(onClick = {navController.navigate("mainpage")}) { Icon(Icons.Default.Home, "home") }
     })
 }
 
