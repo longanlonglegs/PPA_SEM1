@@ -171,17 +171,15 @@ fun MainApp() {
         composable("mainpage") {MainPage(navController, "cool cs kids")}
         composable("loginpage") { LoginPage(navController) }
         composable("paymentpage") { PaymentPage(navController) }
-        composable("itempage/{name}/{price}/{id}",
+        composable("itempage/{name}/{price}",
             listOf(navArgument("name"){NavType.StringType},
-                navArgument("price"){NavType.FloatType},
-                navArgument("id"){NavType.IntType})
+                navArgument("price"){NavType.FloatType})
         ) {backStackEntry->
             val name = backStackEntry.arguments?.getString("name")
             val price = backStackEntry.arguments?.getDouble("price")
-            val id = backStackEntry.arguments?.getInt("id")
-            if (name != null && price != null && id != null) {
-                ItemPage(Modifier.padding(12.dp), navController, item, name, price, id)
-            //call navController.navigate("itempage/${name}/${price}/${id}")
+            if (name != null && price != null) {
+                ItemPage(Modifier.padding(12.dp), navController, item, name, price)
+            //call navController.navigate("itempage/${name}/${price}")
             }
         }
         composable("paidpage") { PaidPage(Modifier.padding(12.dp), navController) }
@@ -263,7 +261,7 @@ fun MainPage(navController: NavController, name: String) {
 
                                 item.value = listOf(element.name, element.price.toString())
 
-                                navController.navigate("itempage/${element.name}/${element.price}/${imageResourceID}")
+                                navController.navigate("itempage/${element.name}/${element.price}")
                                       },
                             elevation = CardDefaults.cardElevation(
                                 defaultElevation = 6.dp
@@ -551,7 +549,7 @@ fun PaidPage(padding: Modifier, navController: NavController) {
 }
 
 @Composable
-fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, price: Double, id:Int) {
+fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, price: Double) {
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -703,9 +701,8 @@ fun ItemPagepreview() {
     PPA_SEM1Theme {
         val name:String =""
         val price:Double = 0.0
-        val id:Int=0
         val navController = rememberNavController()
-        ItemPage(Modifier.padding(12.dp), navController, item,name,price,id)
+        ItemPage(Modifier.padding(12.dp), navController, item,name,price)
     }
 }
 
