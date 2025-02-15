@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     implementation (libs.compose.ratingbar)
     implementation(libs.androidx.media3.common.ktx)
+    implementation(libs.androidx.espresso.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
