@@ -282,7 +282,8 @@ fun MainPage(navController: NavController, name: String) {
                                     painterResource(imageResourceID), "item 1",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .size(200.dp)
+                                        .width(150.dp)
+                                        .fillMaxHeight()
                                         .background(Color.White)
                                         .padding(20.dp)
                                 )
@@ -548,47 +549,67 @@ fun PaidPage(padding: Modifier, navController: NavController) {
     })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, price: Double) {
-    Column (
-        modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                this.alpha = 0.5f
-            },
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.padding(15.dp))
-        Image(
-            painter = painterResource(LocalContext.current.resources.getIdentifier(name, "drawable", LocalContext.current.packageName)),
-            contentDescription = "Item",
-            modifier = Modifier
-                .size(300.dp)
-        )
+    Scaffold (
+        topBar = {
+            TopAppBar(
+                title = {Text("Details")},
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
+                        )
+                    }
+                }
+            )
+        },
+        content = {
+            paddingValues->
+            Column (
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        this.alpha = 0.5f
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.padding(15.dp))
+                Image(
+                    painter = painterResource(LocalContext.current.resources.getIdentifier(name, "drawable", LocalContext.current.packageName)),
+                    contentDescription = "Item",
+                    modifier = Modifier
+                        .size(300.dp)
+                )
 
-        Spacer(modifier = Modifier.padding(15.dp))
-        Text(text = name,
-            fontWeight = FontWeight.Bold,
-        )
+                Spacer(modifier = Modifier.padding(15.dp))
+                Text(text = name,
+                    fontWeight = FontWeight.Bold,
+                )
 
-        Spacer(modifier = Modifier.padding(15.dp))
-        Text(text = "$$price",
-            fontWeight = FontWeight.SemiBold
-        )
+                Spacer(modifier = Modifier.padding(15.dp))
+                Text(text = "$$price",
+                    fontWeight = FontWeight.SemiBold
+                )
 
-        Spacer(modifier = Modifier.padding(15.dp))
-        Text(text = "QUANTITY ")
+                Spacer(modifier = Modifier.padding(15.dp))
+                Text(text = "QUANTITY ")
 
-        Spacer(modifier = Modifier.padding(15.dp))
-        Button(
-            onClick = {},
-            modifier = Modifier
-                .size(width = 150.dp, height = 50.dp),
-            content = {
-                Text(text = "Add to Cart")
+                Spacer(modifier = Modifier.padding(15.dp))
+                Button(
+                    onClick = {},
+                    modifier = Modifier
+                        .size(width = 150.dp, height = 50.dp),
+                    content = {
+                        Text(text = "Add to Cart")
+                    }
+                )
             }
-        )
-    }
+        }
+    )
 }
 
 @Composable
