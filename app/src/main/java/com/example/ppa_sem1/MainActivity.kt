@@ -253,7 +253,7 @@ fun ShoppingCart(navController: NavController) {
     var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
     cart = readBuyingJsonFromFile(context, "buying.json")
 
-    Column (Modifier.fillMaxSize()){
+    Column (Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally){
         LazyColumn (Modifier.height(150.dp)){
             for (item in cart) {
                 item {
@@ -270,7 +270,7 @@ fun ShoppingCart(navController: NavController) {
             }
         }
 
-        Row (Modifier.fillMaxWidth().align(Alignment.CenterHorizontally), horizontalArrangement = Arrangement.spacedBy(10.dp)){
+        Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)){
             Button(onClick = {
                 navController.navigate("paymentpage")
             }, ) { Text("pay now") }
@@ -609,11 +609,18 @@ fun SignUpPage(navController: NavController) {
 
 @Composable
 fun PaymentPage( navController: NavController) {
+
+    val context = LocalContext.current
+    var money by remember { mutableStateOf(0.0) }
+    var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
+    cart = readBuyingJsonFromFile(context, "buying.json")
+    for (item in cart) money += item.price
+
     Scaffold (content = {paddingValues ->
         Column(Modifier
             .padding(paddingValues)
             .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceAround ,content = {
-            Text("\$Money", fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
+            Text("\$$money", fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
             Text("Thank you for shopping with us!", fontWeight = FontWeight.Bold, fontSize = 20.sp)
             Spacer(Modifier.padding(10.dp))
             Box(Modifier
