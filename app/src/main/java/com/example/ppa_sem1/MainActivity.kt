@@ -84,6 +84,7 @@ import com.example.ppa_sem1.MainActivity.Companion.item
 import com.example.ppa_sem1.ui.theme.PPA_SEM1Theme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
@@ -128,9 +129,11 @@ fun writeJsonToFile(context: Context, data: List<users>, filename: String) {
 
 @Composable
 // Function to read JSON from a file and deserialize it into a list of `users`
-fun readJsonFromFile(context: Context, filename: String): List<users> {
+fun readJsonFromFile(context: Context, filename: String): ArrayList<users> {
 
-    val context = LocalContext.current
+    val file = File(context.filesDir, "users.json")
+
+    if (!file.exists()) file.createNewFile()
 
     // Open the file input stream
     val fileInputStream: FileInputStream = context.openFileInput(filename)
@@ -357,8 +360,7 @@ fun LoginPage(navController: NavController) {
         var username by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
-        var userList by remember { mutableStateOf((listOf(users("test", "pw")))) }
-        writeJsonToFile(context, listOf(users("testing", "pw")), "users.json")
+        var userList by remember { mutableStateOf((arrayListOf(users("test", "pw")))) }
         userList = readJsonFromFile(context, "users.json")
         
         Spacer(modifier = Modifier.height(50.dp))
@@ -401,12 +403,14 @@ fun LoginPage(navController: NavController) {
                     Toast.makeText(context, "Logged in!", Toast.LENGTH_SHORT).show()
                     state = !state
                 }
-
-                if (!state) {
-                    Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT).show()
-                    state = !state
-                }
             }
+
+            if (!state) {
+                Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT).show()
+            }
+
+            state = false
+
         }) {
             Text("Login")
         }
@@ -431,8 +435,7 @@ fun SignUpPage(navController: NavController) {
         var cpassword by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
         var cpasswordVisible by remember { mutableStateOf(false) }
-        var userList by remember { mutableStateOf((listOf(users("test", "pw")))) }
-        writeJsonToFile(context, listOf(users("testing", "pw")), "users.json")
+        var userList by remember { mutableStateOf((arrayListOf(users("test", "pw")))) }
         userList = readJsonFromFile(context, "users.json")
 
         Spacer(modifier = Modifier.height(50.dp))
@@ -487,9 +490,10 @@ fun SignUpPage(navController: NavController) {
              */
             if(password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#\$%^&*()_+\\-=\\[\\]{};':\",.<>?/|\\\\`~]{8,20}\$".toRegex())){
                 if(password == cpassword){
-                    userList += users(username, password)
+                    userList.add(users(username, password))
                     writeJsonToFile(context, userList, "users.json")
                     navController.navigate("mainpage")
+                    Toast.makeText(context, "Sign up successful!", Toast.LENGTH_SHORT).show()
                 }else{
                     Toast.makeText(context, "Password and confirm do not match",Toast.LENGTH_SHORT).show()
                 }
