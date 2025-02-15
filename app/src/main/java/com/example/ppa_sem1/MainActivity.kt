@@ -53,6 +53,7 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -90,6 +91,11 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.Charset
+import androidx.media3.common.util.Log
+import androidx.media3.common.util.UnstableApi
+import com.gowtham.ratingbar.RatingBar
+import com.gowtham.ratingbar.RatingBarStyle
+import com.gowtham.ratingbar.StepSize
 
 class MainActivity : ComponentActivity() {
 
@@ -189,6 +195,7 @@ fun MainApp() {
     }
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainPage(navController: NavController, name: String) {
@@ -201,7 +208,7 @@ fun MainPage(navController: NavController, name: String) {
 
     itemList = parseJsonList(readJsonFromAssets(context))
 
-    var rating by remember { mutableStateOf(4f) } //default rating will be 1
+    var rating = remember { mutableStateListOf<Float>().apply { addAll(List(itemList.size){0f}) } } //default rating will be 1
 
     Scaffold (
         topBar = {
@@ -253,7 +260,7 @@ fun MainPage(navController: NavController, name: String) {
                         placeholder = { Text("Search by keyword")},
                         leadingIcon = {Icon(Icons.Default.Search, contentDescription = "Search")})
                 }
-                for (element in itemList) {
+                for ((index, element) in itemList.withIndex()) {
                     item {
                         val imageResourceID = LocalContext.current.resources.getIdentifier(element.name, "drawable", LocalContext.current.packageName)
                         ElevatedCard(
@@ -303,14 +310,16 @@ fun MainPage(navController: NavController, name: String) {
                                             .padding(16.dp),
                                         textAlign = TextAlign.Center,
                                     )
-
-                                    StarRatingBar(
-                                        maxStars = 5,
-                                        rating = rating,
-                                        onRatingChanged = {
-                                            rating = it
-                                        }
-                                    )
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                                        RatingBar(
+                                            value = rating[index],
+                                            style = RatingBarStyle.Fill(),
+                                            onValueChange = {
+                                                rating[index] = it
+                                            },
+                                            stepSize = StepSize.HALF
+                                        ){}
+                                    }
                                 }
                             }
 
@@ -586,7 +595,8 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                 )
 
                 Spacer(modifier = Modifier.padding(15.dp))
-                Text(text = name,
+                Text(
+                    text = name,
                     fontWeight = FontWeight.Bold,
                 )
 
