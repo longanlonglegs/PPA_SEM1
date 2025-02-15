@@ -52,6 +52,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -123,7 +124,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class buyingItem(val name: String, val price: Double, val quantity: Int)
+data class buyingItem(val name: String, val price: Double, val quantity: Int, val size: String)
 data class clothes(val name: String, val price: Double)
 data class users(val name: String, val password: String)
 
@@ -186,7 +187,7 @@ fun readBuyingJsonFromFile(context: Context, filename: String): ArrayList<buying
 
     if (!file.exists()) {file.createNewFile()}
 
-    if (file.length() == 0L) writeBuyingJsonToFile(LocalContext.current, arrayListOf(buyingItem("", 0.0, 0)) ,"buying.json")
+    if (file.length() == 0L) writeBuyingJsonToFile(LocalContext.current, arrayListOf(buyingItem("", 0.0, 0, "s")) ,"buying.json")
 
     // Open the file input stream
     val fileInputStream: FileInputStream = context.openFileInput(filename)
@@ -253,7 +254,7 @@ fun MainApp() {
 fun ShoppingCart(navController: NavController) {
 
     var context = LocalContext.current
-    var cart by remember { mutableStateOf(arrayListOf(buyingItem("logo", 0.0, 0))) }
+    var cart by remember { mutableStateOf(arrayListOf(buyingItem("logo", 0.0, 0, "S"))) }
     cart = readBuyingJsonFromFile(context, "buying.json")
 
     Scaffold (
@@ -265,21 +266,32 @@ fun ShoppingCart(navController: NavController) {
                     }){Icon(Icons.Default.ArrowBack, "")}
                 })
         },
-        content = {paddingValues ->
+        content = { paddingValues ->
 
-            Column (Modifier.fillMaxSize().padding(paddingValues), horizontalAlignment = Alignment.CenterHorizontally){
-                LazyColumn (Modifier.height(400.dp), verticalArrangement = Arrangement.spacedBy(20.dp), horizontalAlignment = Alignment.CenterHorizontally){
+            Column(
+                Modifier.fillMaxSize().padding(paddingValues),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                LazyColumn(
+                    Modifier.height(400.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     for (item in cart) {
                         item {
-                            Card (Modifier.fillMaxSize()){
+                            Card(Modifier.fillMaxSize()) {
                                 Row {
 
                                     Image(painterResource(R.drawable.ic_launcher_background), "")
 
-                                    Column (Modifier.fillMaxSize()){
-                                        Text(item.name)
+                                    Column(
+                                        Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Text(item.name, fontWeight = FontWeight.Bold)
                                         Text(item.price.toString())
                                         Text(item.quantity.toString())
+                                        Text(item.size)
                                     }
                                 }
                             }
@@ -287,21 +299,21 @@ fun ShoppingCart(navController: NavController) {
                     }
                 }
 
-        Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)){
-            Button(
-                onClick = {
-                    navController.navigate("paymentpage")
-                },
-            ) { Text("pay now") }
-            Button(
-                onClick = {
-                    cart = arrayListOf(buyingItem("", 0.0, 0))
-                    writeBuyingJsonToFile(context, cart, "buying.json")
-                },
-            ) { Text("Clear cart") }
-        }
-    }
-
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        onClick = {
+                            navController.navigate("paymentpage")
+                        },
+                    ) { Text("pay now") }
+                    Button(
+                        onClick = {
+                            cart = arrayListOf(buyingItem("", 0.0, 0, ""))
+                            writeBuyingJsonToFile(context, cart, "buying.json")
+                        },
+                    ) { Text("Clear cart") }
+                }
+            }
+        })
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -634,7 +646,7 @@ fun PaymentPage( navController: NavController) {
 
     val context = LocalContext.current
     var money by remember { mutableStateOf(0.0) }
-    var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
+    var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0, ""))) }
     cart = readBuyingJsonFromFile(context, "buying.json")
     for (item in cart) money += item.price
 
@@ -681,8 +693,10 @@ fun PaidPage(padding: Modifier, navController: NavController) {
 @Composable
 fun ItemPage(modifier: Modifier, navController: NavController, item: MutableState<List<String>>, name:String, price: Double) {
     val context = LocalContext.current
-    var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0))) }
+    var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0, ""))) }
     var quantity by remember { mutableStateOf(1) }
+    var size by remember { mutableStateOf("") }
+    var state by remember { mutableStateOf(1) }
 
     cart = readBuyingJsonFromFile(context, "buying.json")
     Scaffold (
@@ -707,7 +721,6 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                     .padding(paddingValues),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.padding(15.dp))
                 Image(
                     painter = painterResource(
                         LocalContext.current.resources.getIdentifier(
@@ -718,23 +731,16 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                     ),
                     contentDescription = "Item",
                     modifier = Modifier
-                        .size(300.dp)
+                        .size(150.dp)
                 )
-
-                Spacer(modifier = Modifier.padding(15.dp))
                 Text(
                     text = name,
                     fontWeight = FontWeight.Bold,
                 )
-
-                Spacer(modifier = Modifier.padding(15.dp))
                 Text(
                     text = "$$price",
                     fontWeight = FontWeight.SemiBold
                 )
-
-                Spacer(modifier = Modifier.padding(15.dp))
-
                 Column {
                     Text(text = "QUANTITY: $quantity")
                     Row {
@@ -755,14 +761,56 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
 
                 }
 
+                Card (Modifier.fillMaxWidth()) {
+
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                        Column {
+
+                            Text("S", textAlign = TextAlign.Center)
+                            RadioButton(
+                                selected = state == 1,
+                                onClick = {
+                                    state = 1
+                                    size = "S"
+                                })
+                        }
+
+                        Column {
+
+                            Text("M", textAlign = TextAlign.Center)
+                            RadioButton(
+                                selected = state == 2,
+                                onClick = {
+                                    state = 2
+                                    size = "M"
+                                })
+                        }
+
+                        Column {
+
+                            Text("L", textAlign = TextAlign.Center)
+                            RadioButton(
+                                selected = state == 3,
+                                onClick = {
+                                    state = 3
+                                    size = "L"
+                                })
+                        }
+
+                        Text(size)
+
+                    }
+                }
+
 
                 Spacer(modifier = Modifier.padding(15.dp))
                 Button(
                     onClick = {
-                        cart += buyingItem(name, price, quantity)
+                        cart += buyingItem(name, price, quantity, size)
                         writeBuyingJsonToFile(context, cart, "buying.json")
                         navController.navigate("mainpage")
-                        Toast.makeText(context, "Item added to cart!", Toast.LENGTH_SHORT)
+                        Toast.makeText(context, "Item added to cart!", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier
                         .size(width = 150.dp, height = 50.dp),
