@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,8 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,14 +30,17 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
@@ -67,12 +67,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -83,6 +83,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -225,7 +226,7 @@ fun readJsonFromAssets(context: Context): String {
 fun MainApp() {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "mainpage") {
-        composable("mainpage") {MainPage(navController, "cool cs kids")}
+        composable("mainpage") {MainPage(navController)}
         composable("loginpage") { LoginPage(navController) }
         composable("paymentpage") { PaymentPage(navController) }
         composable("itempage/{name}/{price}",
@@ -241,11 +242,12 @@ fun MainApp() {
                 //call navController.navigate("itempage/${name}/${price}/")
             }
         }
-        composable("paidpage") { PaidPage(Modifier.padding(12.dp), navController) }
+        composable("paidpage") { PaidPage(navController) }
         composable("info") { Info(navController) }
         composable("signup") { SignUpPage(navController) }
         composable("contact") { Contact(navController)  }
         composable("shoppingcart") {ShoppingCart(navController)}
+        composable("review") { ReviewPage(navController) }
     }
 }
 
@@ -319,7 +321,7 @@ fun ShoppingCart(navController: NavController) {
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MainPage(navController: NavController, name: String) {
+fun MainPage(navController: NavController) {
 
     val context = LocalContext.current
 
@@ -418,7 +420,6 @@ fun MainPage(navController: NavController, name: String) {
                                         .width(150.dp)
                                         .fillMaxHeight()
                                         .background(Color.White)
-                                        .padding(20.dp)
                                 )
                                 Column (Modifier.fillMaxHeight()){
                                     Text(
@@ -478,6 +479,15 @@ fun MainPage(navController: NavController, name: String) {
                     )
                 }
             }
+        },
+        bottomBar = {
+            BottomAppBar(
+                content = {
+                    Button(onClick = {navController.navigate("review")}){
+                        Text("Leave a review!")
+                    }
+                }
+            )
         }
     )
 }
@@ -684,12 +694,61 @@ fun PaymentPage( navController: NavController) {
 }
 
 @Composable
-fun PaidPage(padding: Modifier, navController: NavController) {
+fun PaidPage(navController: NavController) {
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp), content = {
         Image(painterResource(R.drawable.logo), "logo")
         Text("Thanks for the shopping with Peak Performance Gear!", fontSize = 50.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 50.sp, textAlign = TextAlign.Center)
         Button(onClick = {navController.navigate("mainpage")}) { Icon(Icons.Default.Home, "home") }
+        Spacer(modifier = Modifier.height(200.dp))
     })
+}
+
+@Composable
+fun ReviewPage(navController: NavController){
+    val context = LocalContext.current
+    var itemList by remember { mutableStateOf(listOf(clothes("testing", 30.00)))}
+    itemList = parseJsonList(readJsonFromAssets(context))
+    var itemBought by remember { mutableStateOf("") }
+    Column (horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()){
+        Spacer(modifier = Modifier.height(100.dp))
+        var mExpanded by remember { mutableStateOf(false) }
+        val icon = if (mExpanded)
+            Icons.Filled.KeyboardArrowUp
+        else
+            Icons.Filled.KeyboardArrowDown
+        Box{
+            DropdownMenu(
+                expanded = mExpanded,
+                onDismissRequest = { mExpanded = false },
+            ) {
+                itemList.forEach { label ->
+                    DropdownMenuItem(onClick = {
+                        itemBought = label.name
+                        mExpanded = false
+                    },
+                        text = { Text(label.name) })
+                }
+            }
+            TextField(
+                value = itemBought,
+                onValueChange = {itemBought = it},
+                label = { Text("Item Bought") },
+                trailingIcon = {
+
+                    IconButton(onClick = {
+                        mExpanded=true
+                    }) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null
+                        )
+                    }
+                }
+            )
+        }
+        Spacer(modifier = Modifier.height(50.dp))
+
+    }
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -828,46 +887,6 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
     )
 }
 
-@Composable
-fun StarRatingBar(
-    maxStars: Int = 5,
-    rating: Float,
-    onRatingChanged: (Float) -> Unit
-) {
-    val density = LocalDensity.current.density
-    val starSize = (12f * density).dp
-    val starSpacing = (0.5f * density).dp
-
-    Row(
-        modifier = Modifier.selectableGroup(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        for (i in 1..maxStars) {
-            val isSelected = i <= rating
-            val icon = if (isSelected) Icons.Filled.Star else Icons.Default.Star
-            val iconTintColor = if (isSelected) Color(0xFFFFC700) else Color(0x20FFFFFF)
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTintColor,
-                modifier = Modifier
-                    .selectable(
-                        selected = isSelected,
-                        onClick = {
-                            onRatingChanged(i.toFloat())
-                        }
-                    )
-                    .width(starSize)
-                    .height(starSize)
-            )
-
-            if (i < maxStars) {
-                Spacer(modifier = Modifier.width(starSpacing))
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Contact(navController: NavController){
@@ -910,7 +929,7 @@ fun ContactPreview(){
 fun MainPagepreview() {
     PPA_SEM1Theme {
         val navController = rememberNavController()
-        MainPage( navController, "cool cs kids")
+        MainPage( navController)
     }
 }
 
@@ -948,7 +967,7 @@ fun ItemPagepreview() {
 fun PaidPagepreview() {
     PPA_SEM1Theme {
         val navController = rememberNavController()
-        PaidPage(Modifier.padding(12.dp), navController)
+        PaidPage(navController)
     }
 }
 
