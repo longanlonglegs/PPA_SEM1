@@ -1,26 +1,34 @@
 [
   {
-    "name": "shirt",
+    "name": "coldfit",
     "price": 19.99
   },
   {
-    "name": "hoodie",
+    "name": "doomcurler",
     "price": 69.99
   },
   {
-    "name": "shoe",
+    "name": "sharkwear",
     "price": 79.99
   },
   {
-    "name": "shorts",
+    "name": "tapninja",
     "price": 10.49
   },
   {
-    "name": "cycling_shirt",
+    "name": "wetfit",
     "price": 27.99
   },
   {
-    "name": "dumbell",
+    "name": "zulufit",
     "price": 49.99
+  },
+  {
+    "name": "whitedancer",
+    "price": 34.99
+  },
+  {
+    "name": "sweesh",
+    "price": 129.99
   }
 ]

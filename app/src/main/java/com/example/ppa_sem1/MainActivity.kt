@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -67,13 +68,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -144,7 +149,7 @@ fun writeJsonToFile(context: Context, data: List<users>, filename: String) {
 }
 
 // Function to write JSON to a file
-fun writeBuyingJsonToFile(context: Context, data: List<buyingItem>, filename: String) {
+fun writeBuyingJsonToFile(context: Context, data: ArrayList<buyingItem>, filename: String) {
     val gson = Gson()
     val jsonData = gson.toJson(data)  // Serialize the MyData object to JSON
 
@@ -188,7 +193,7 @@ fun readBuyingJsonFromFile(context: Context, filename: String): ArrayList<buying
 
     if (!file.exists()) {file.createNewFile()}
 
-    if (file.length() == 0L) writeBuyingJsonToFile(LocalContext.current, arrayListOf(buyingItem("", 0.0, 0, "s")) ,"buying.json")
+    if (file.length() == 0L) writeBuyingJsonToFile(LocalContext.current, arrayListOf(buyingItem("test", 0.0, 0, "s")) ,"buying.json")
 
     // Open the file input stream
     val fileInputStream: FileInputStream = context.openFileInput(filename)
@@ -265,7 +270,7 @@ fun ShoppingCart(navController: NavController) {
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.navigate("mainpage")
-                    }){Icon(Icons.Default.ArrowBack, "")}
+                    }){Icon(Icons.AutoMirrored.Filled.ArrowBack, "")}
                 })
         },
         content = { paddingValues ->
@@ -284,7 +289,18 @@ fun ShoppingCart(navController: NavController) {
                             Card(Modifier.fillMaxSize()) {
                                 Row {
 
-                                    Image(painterResource(R.drawable.ic_launcher_background), "")
+                                    Image(
+                                        painter = painterResource(
+                                            LocalContext.current.resources.getIdentifier(
+                                                item.name,
+                                                "drawable",
+                                                LocalContext.current.packageName
+                                            )
+                                        ),
+                                        contentDescription = "Item",
+                                        modifier = Modifier
+                                            .size(150.dp)
+                                    )
 
                                     Column(
                                         Modifier.fillMaxSize(),
@@ -309,7 +325,7 @@ fun ShoppingCart(navController: NavController) {
                     ) { Text("pay now") }
                     Button(
                         onClick = {
-                            cart = arrayListOf(buyingItem("", 0.0, 0, ""))
+                            cart = arrayListOf(buyingItem("logo", 0.0, 0, ""))
                             writeBuyingJsonToFile(context, cart, "buying.json")
                         },
                     ) { Text("Clear cart") }
@@ -337,10 +353,10 @@ fun MainPage(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically){ Image(painterResource(R.drawable.logo),null, modifier = Modifier
-                        .size(70.dp)
-                        .padding(vertical = 10.dp))
-                        Text("Peak Performance Gear", modifier = Modifier.padding(horizontal = 10.dp))}
+                        Text("PPG Online Store", modifier = Modifier.padding(10.dp))
+                },
+                navigationIcon = {
+                    Image(painterResource(R.drawable.logo), "icon", Modifier.padding(10.dp))
                 },
                 colors = TopAppBarColors(
                     Color.hsl(207f, 0.26f, 0.13f),
@@ -371,7 +387,9 @@ fun MainPage(navController: NavController) {
                 item {
                     Text("Where Performance Meets Peak",
                         fontWeight = FontWeight.ExtraBold,
+                        fontStyle = FontStyle.Italic,
                         textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(10.dp)
@@ -380,7 +398,7 @@ fun MainPage(navController: NavController) {
                 stickyHeader {
                     TextField(value = search, onValueChange = {search = it},
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Search by keyword")},
+                        placeholder = { Text("Search by keyword...")},
                         leadingIcon = {Icon(Icons.Default.Search, contentDescription = "Search")})
                 }
 
@@ -393,13 +411,12 @@ fun MainPage(navController: NavController) {
                         val imageResourceID = LocalContext.current.resources.getIdentifier(element.name, "drawable", LocalContext.current.packageName)
                         ElevatedCard(
                             onClick = {
-
                                 item.value = listOf(element.name, element.price.toString())
                                 Log.d("valueCheck","${element.price}")
                                 navController.navigate("itempage/${element.name}/${element.price}")
                             },
                             elevation = CardDefaults.cardElevation(
-                                defaultElevation = 6.dp
+                                defaultElevation = 10.dp
                             ),
                             colors = CardColors(
                                 contentColor = Color.White,
@@ -409,31 +426,27 @@ fun MainPage(navController: NavController) {
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(200.dp)
-                                .padding(5.dp)
+                                .height(150.dp)
+                                .padding(vertical = 5.dp, horizontal = 15.dp)
                         ) {
-                            Row (Modifier.fillMaxSize()) {
+                            Row (Modifier.fillMaxSize().padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(15.dp)) {
                                 Image(
                                     painterResource(imageResourceID), "item 1",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .width(150.dp)
-                                        .fillMaxHeight()
-                                        .background(Color.White)
+                                        .size(100.dp, 100.dp)
+                                        .background(Color.LightGray)
+                                        .padding(10.dp)
                                 )
-                                Column (Modifier.fillMaxHeight()){
+                                Column (Modifier.fillMaxHeight().padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)){
                                     Text(
                                         text = element.name,
-                                        modifier = Modifier
-                                            .padding(16.dp),
                                         textAlign = TextAlign.Center,
-                                        fontSize = 40.sp,
+                                        fontSize = 25.sp,
                                         fontWeight = FontWeight.ExtraBold
                                     )
                                     Text(
                                         text = "\$${element.price}",
-                                        modifier = Modifier
-                                            .padding(16.dp),
                                         textAlign = TextAlign.Center,
                                     )
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
@@ -470,7 +483,7 @@ fun MainPage(navController: NavController) {
                     onDismissRequest = { expanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Find out more about us!") },
+                        text = { Text("About") },
                         onClick = { navController.navigate("info")}
                     )
                     DropdownMenuItem(
@@ -483,10 +496,15 @@ fun MainPage(navController: NavController) {
         bottomBar = {
             BottomAppBar(
                 content = {
-                    Button(onClick = {navController.navigate("review")}){
-                        Text("Leave a review!")
+                    Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally){
+                        Button(onClick = { navController.navigate("review") }) {
+                            Text("Leave a review!", fontSize = 25.sp)
+
+                        }
                     }
-                }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                containerColor = Color.DarkGray
             )
         }
     )
@@ -662,7 +680,7 @@ fun PaymentPage( navController: NavController) {
     var money by remember { mutableStateOf(0.0) }
     var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0, ""))) }
     cart = readBuyingJsonFromFile(context, "buying.json")
-    for (item in cart) money += item.price
+    for (item in cart) money.plus(item.price)
 
     Scaffold (content = {paddingValues ->
         Column(Modifier
@@ -783,7 +801,8 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 Image(
                     painter = painterResource(
@@ -825,11 +844,11 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
 
                 }
 
-                Card (Modifier.fillMaxWidth()) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
 
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Card (Modifier.padding(10.dp).defaultMinSize(minWidth = 40.dp)) {
 
-                        Column {
+                        Column (horizontalAlignment = Alignment.CenterHorizontally){
 
                             Text("S", textAlign = TextAlign.Center)
                             RadioButton(
@@ -839,8 +858,11 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                                     size = "S"
                                 })
                         }
+                    }
 
-                        Column {
+                    Card (Modifier.padding(10.dp).defaultMinSize(minWidth = 70.dp)) {
+
+                        Column  (horizontalAlignment = Alignment.CenterHorizontally){
 
                             Text("M", textAlign = TextAlign.Center)
                             RadioButton(
@@ -850,8 +872,11 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                                     size = "M"
                                 })
                         }
+                    }
 
-                        Column {
+                    Card (Modifier.padding(10.dp).defaultMinSize(minWidth = 70.dp)) {
+
+                        Column  (horizontalAlignment = Alignment.CenterHorizontally){
 
                             Text("L", textAlign = TextAlign.Center)
                             RadioButton(
@@ -861,12 +886,26 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                                     size = "L"
                                 })
                         }
-
-                        Text(size)
-
                     }
+
+                    Card (Modifier.padding(10.dp).defaultMinSize(minWidth = 70.dp)) {
+
+                        Column  (horizontalAlignment = Alignment.CenterHorizontally){
+
+                            Text("XL", textAlign = TextAlign.Center)
+                            RadioButton(
+                                selected = state == 4,
+                                onClick = {
+                                    state = 4
+                                    size = "XL"
+                                })
+                        }
+                    }
+
+
                 }
 
+                Text(size)
 
                 Spacer(modifier = Modifier.padding(15.dp))
                 Button(
