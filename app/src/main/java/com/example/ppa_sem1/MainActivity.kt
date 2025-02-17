@@ -1,6 +1,7 @@
 package com.example.ppa_sem1
 
 import android.content.Context
+import android.content.res.Resources.Theme
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -28,16 +29,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Visibility
@@ -54,6 +58,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -391,20 +396,41 @@ fun MainPage(navController: NavController) {
                 navigationIcon = {
                     Image(painterResource(R.drawable.logo), "icon", Modifier.padding(10.dp))
                 },
-                colors = TopAppBarColors(
-                    Color.hsl(207f, 0.26f, 0.13f),
-                    scrolledContainerColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    titleContentColor = Color.White,
-                    actionIconContentColor = Color.White
-                ),
                 actions = {
-                    IconButton(onClick = {
-                        navController.navigate("shoppingcart")
-                    }) {Icon(Icons.Default.ShoppingCart, contentDescription = "shopping cart")}
+
                     IconButton(onClick = {
                         navController.navigate("loginpage")
                     }) {Icon(Icons.Default.AccountCircle, contentDescription = "login")}
+
+                    var expanded by remember { mutableStateOf(false) }
+
+                    IconButton(onClick = {
+                        expanded = !expanded
+                    },
+                    )  { Icon((Icons.Default.MoreVert), contentDescription = "LEAVE REVIEW")}
+                    Box(
+                        modifier = Modifier
+                            .padding(16.dp)
+                    ) {
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("About") },
+                                onClick = { navController.navigate("info")}
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Contact Us") },
+                                onClick = {navController.navigate("contact") }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Leave a review") },
+                                onClick = { navController.navigate("review")}
+                            )
+                        }
+                    }
                 }
             )
         },
@@ -415,7 +441,6 @@ fun MainPage(navController: NavController) {
                 modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxWidth()
-                    .background(Color.LightGray)
             ) {
                 item {
                     Text("Where Performance Meets Peak",
@@ -446,16 +471,11 @@ fun MainPage(navController: NavController) {
                             onClick = {
                                 item.value = listOf(element.name, element.price.toString())
                                 Log.d("valueCheck","${element.price}")
-                                navController.navigate("itempage/${element.name}/${element.price}")
+                                navController.navigate("itempage/${element.name}/${element.price}"
+                                )
                             },
                             elevation = CardDefaults.cardElevation(
                                 defaultElevation = 10.dp
-                            ),
-                            colors = CardColors(
-                                contentColor = Color.White,
-                                containerColor = Color.DarkGray,
-                                disabledContentColor = Color.White,
-                                disabledContainerColor = Color.White
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -470,7 +490,6 @@ fun MainPage(navController: NavController) {
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .size(100.dp, 100.dp)
-                                        .background(Color.LightGray)
                                         .padding(10.dp)
                                 )
                                 Column (Modifier
@@ -506,44 +525,10 @@ fun MainPage(navController: NavController) {
         },
 
         floatingActionButton = {
-            var expanded by remember { mutableStateOf(false) }
             FloatingActionButton(onClick = {
-                expanded = !expanded
-            },
-                containerColor = Color.Black)  { Icon((Icons.Filled.Info), contentDescription = "LEAVE REVIEW")}
-            Box(
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("About") },
-                        onClick = { navController.navigate("info")}
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Contact Us") },
-                        onClick = {navController.navigate("contact") }
-                    )
-                }
-            }
+                navController.navigate("shoppingcart")
+            }) {Icon(Icons.Default.ShoppingCart, contentDescription = "shopping cart")}
         },
-        bottomBar = {
-            BottomAppBar(
-                content = {
-                    Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally){
-                        Button(onClick = { navController.navigate("review") }) {
-                            Text("Leave a review!", fontSize = 25.sp)
-
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = Color.DarkGray
-            )
-        }
     )
 }
 
@@ -575,49 +560,50 @@ fun LoginPage(navController: NavController) {
             fontWeight = FontWeight.Bold,
             fontSize = 30.sp)
 
-        TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier.padding(10.dp), singleLine = true)
-        TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier.padding(10.dp), singleLine = true,
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            trailingIcon = {
-                val image = if (passwordVisible)
-                    Icons.Filled.Visibility
-                else Icons.Filled.VisibilityOff
+        Column (Modifier.fillMaxWidth().padding(10.dp).align(Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier.padding(10.dp).fillMaxWidth(), singleLine = true)
+            TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier.padding(10.dp).fillMaxWidth(), singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    val image = if (passwordVisible)
+                        Icons.Filled.Visibility
+                    else Icons.Filled.VisibilityOff
 
-                // Please provide localized description for accessibility services
-                val description = if (passwordVisible) "Hide password" else "Show password"
+                    // Please provide localized description for accessibility services
+                    val description = if (passwordVisible) "Hide password" else "Show password"
 
-                IconButton(onClick = {passwordVisible = !passwordVisible}){
-                    Icon(imageVector  = image, description)
+                    IconButton(onClick = {passwordVisible = !passwordVisible}){
+                        Icon(imageVector  = image, description)
+                    }
+                })
+            Button(onClick = {
+                for (user in userList) {
+                    if (user == users(username, password)) {
+                        navController.navigate("mainpage")
+                        Toast.makeText(context, "Logged in!", Toast.LENGTH_SHORT).show()
+                        state = !state
+                    }
                 }
-            })
-        Button(onClick = {
-            for (user in userList) {
-                if (user == users(username, password)) {
-                    navController.navigate("mainpage")
-                    Toast.makeText(context, "Logged in!", Toast.LENGTH_SHORT).show()
-                    state = !state
+
+                if (!state) {
+                    Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT).show()
                 }
+
+                state = false
+
+            }) {
+                Text("Login")
             }
-
-            if (!state) {
-                Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT).show()
-            }
-
-            state = false
-
-        }) {
-            Text("Login")
+            Text("Don't have an account? Sign Up here", modifier = Modifier
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = { navController.navigate("signup") }
+                    )
+                }
+                .padding(10.dp),
+                textDecoration = TextDecoration.Underline)
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        Text("Don't have an account? Sign Up here", modifier = Modifier
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { navController.navigate("signup") }
-                )
-            }
-            .padding(10.dp),
-            textDecoration = TextDecoration.Underline)
     }
 }
 
@@ -728,7 +714,6 @@ fun PaymentPage( navController: NavController) {
             Spacer(Modifier.padding(10.dp))
             Box(Modifier
                 .fillMaxWidth()
-                .background(Color.Cyan)
                 .align(Alignment.CenterHorizontally),content = {Text("Pay with card", Modifier.align(
                 Alignment.Center))})
             TextField(label = { Text("Email")}, value = "", onValueChange = {})
@@ -750,9 +735,14 @@ fun PaymentPage( navController: NavController) {
 
 @Composable
 fun PaidPage(navController: NavController) {
-    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp), content = {
-        Image(painterResource(R.drawable.logo), "logo")
-        Text("Thanks for the shopping with Peak Performance Gear!", fontSize = 50.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 50.sp, textAlign = TextAlign.Center)
+    Column(Modifier.fillMaxSize().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp), content = {
+        Spacer(Modifier.padding(40.dp))
+        Row (Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Image(painterResource(R.drawable.logo), "logo")
+            Text("Peak Performance Gear", fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 50.sp, textAlign = TextAlign.Center)
+
+        }
+        Text("Thanks for the shopping with us!", fontSize = 25.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 50.sp, textAlign = TextAlign.Center)
         Button(onClick = {navController.navigate("mainpage")}) { Icon(Icons.Default.Home, "home") }
         Spacer(modifier = Modifier.height(200.dp))
     })
@@ -982,7 +972,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
 fun Contact(navController: NavController){
     Scaffold(
         topBar = { TopAppBar(
-            title = {},
+            title = {Text("Contact Information")},
             navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
@@ -996,9 +986,19 @@ fun Contact(navController: NavController){
                 paddingValues ->
             Column(horizontalAlignment = Alignment.CenterHorizontally ,modifier = Modifier
                 .padding(paddingValues)
-                .fillMaxSize()) {
+                .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 Spacer(modifier = Modifier.height(200.dp))
-                Text("Contact Us", fontSize = 32.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(5.dp))
+                Image(painter = painterResource(R.drawable.logo), "")
+                Row (Modifier.align(Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically){
+                    Text(
+                        "Contact Us!",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(5.dp)
+                    )
+                    Icon(Icons.Default.Call, "")
+                }
                 Text("Phone number: XXXXXXXX", fontSize = 20.sp, modifier = Modifier.padding(2.dp))
                 Text("Email: csppa@nushigh.edu.sg", fontSize = 20.sp, modifier = Modifier.padding(2.dp))
             }

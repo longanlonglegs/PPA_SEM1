@@ -25,7 +25,7 @@ val bodyFontFamily = FontFamily(
 
 val displayFontFamily = FontFamily(
     Font(
-        googleFont = GoogleFont("Aoboshi One"),
+        googleFont = GoogleFont("Open Sans"),
         fontProvider = provider,
     )
 )
