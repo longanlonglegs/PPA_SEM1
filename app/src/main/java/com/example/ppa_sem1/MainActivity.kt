@@ -363,13 +363,6 @@ fun MainPage(navController: NavController) {
                 navigationIcon = {
                     Image(painterResource(R.drawable.logo), "icon", Modifier.padding(10.dp))
                 },
-                colors = TopAppBarColors(
-                    Color.hsl(207f, 0.26f, 0.13f),
-                    scrolledContainerColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    titleContentColor = Color.White,
-                    actionIconContentColor = Color.White
-                ),
                 actions = {
                     IconButton(onClick = {
                         navController.navigate("shoppingcart")
@@ -387,7 +380,6 @@ fun MainPage(navController: NavController) {
                 modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxWidth()
-                    .background(Color.LightGray)
             ) {
                 item {
                     Text("Where Performance Meets Peak",
@@ -423,12 +415,6 @@ fun MainPage(navController: NavController) {
                             elevation = CardDefaults.cardElevation(
                                 defaultElevation = 10.dp
                             ),
-                            colors = CardColors(
-                                contentColor = Color.White,
-                                containerColor = Color.DarkGray,
-                                disabledContentColor = Color.White,
-                                disabledContainerColor = Color.White
-                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(150.dp)
@@ -440,7 +426,6 @@ fun MainPage(navController: NavController) {
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .size(100.dp, 100.dp)
-                                        .background(Color.LightGray)
                                         .padding(10.dp)
                                 )
                                 Column (Modifier.fillMaxHeight().padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)){
@@ -478,7 +463,7 @@ fun MainPage(navController: NavController) {
             FloatingActionButton(onClick = {
                 expanded = !expanded
             },
-                containerColor = Color.Black)  { Icon((Icons.Filled.Info), contentDescription = "LEAVE REVIEW")}
+               )  { Icon((Icons.Filled.Info), contentDescription = "LEAVE REVIEW")}
             Box(
                 modifier = Modifier
                     .padding(16.dp)
@@ -509,7 +494,6 @@ fun MainPage(navController: NavController) {
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                containerColor = Color.DarkGray
             )
         }
     )
@@ -696,7 +680,6 @@ fun PaymentPage( navController: NavController) {
             Spacer(Modifier.padding(10.dp))
             Box(Modifier
                 .fillMaxWidth()
-                .background(Color.Cyan)
                 .align(Alignment.CenterHorizontally),content = {Text("Pay with card", Modifier.align(
                 Alignment.Center))})
             TextField(label = { Text("Email")}, value = "", onValueChange = {})
