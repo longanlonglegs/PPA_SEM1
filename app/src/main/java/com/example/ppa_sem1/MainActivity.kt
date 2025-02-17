@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -701,9 +702,14 @@ fun PaymentPage( navController: NavController) {
 
 @Composable
 fun PaidPage(navController: NavController) {
-    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp), content = {
-        Image(painterResource(R.drawable.logo), "logo")
-        Text("Thanks for the shopping with Peak Performance Gear!", fontSize = 50.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 50.sp, textAlign = TextAlign.Center)
+    Column(Modifier.fillMaxSize().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp), content = {
+        Spacer(Modifier.padding(40.dp))
+        Row (Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Image(painterResource(R.drawable.logo), "logo")
+            Text("Peak Performance Gear", fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 50.sp, textAlign = TextAlign.Center)
+
+        }
+        Text("Thanks for the shopping with us!", fontSize = 25.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 50.sp, textAlign = TextAlign.Center)
         Button(onClick = {navController.navigate("mainpage")}) { Icon(Icons.Default.Home, "home") }
         Spacer(modifier = Modifier.height(200.dp))
     })
@@ -919,7 +925,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
 fun Contact(navController: NavController){
     Scaffold(
         topBar = { TopAppBar(
-            title = {},
+            title = {Text("Contact Information")},
             navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
@@ -933,9 +939,19 @@ fun Contact(navController: NavController){
                 paddingValues ->
             Column(horizontalAlignment = Alignment.CenterHorizontally ,modifier = Modifier
                 .padding(paddingValues)
-                .fillMaxSize()) {
+                .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 Spacer(modifier = Modifier.height(200.dp))
-                Text("Contact Us", fontSize = 32.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(5.dp))
+                Image(painter = painterResource(R.drawable.logo), "")
+                Row (Modifier.align(Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically){
+                    Text(
+                        "Contact Us!",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(5.dp)
+                    )
+                    Icon(Icons.Default.Call, "")
+                }
                 Text("Phone number: XXXXXXXX", fontSize = 20.sp, modifier = Modifier.padding(2.dp))
                 Text("Email: csppa@nushigh.edu.sg", fontSize = 20.sp, modifier = Modifier.padding(2.dp))
             }
