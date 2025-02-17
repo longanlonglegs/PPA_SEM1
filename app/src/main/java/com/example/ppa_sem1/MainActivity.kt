@@ -166,9 +166,12 @@ fun writeBuyingJsonToFile(context: Context, data: ArrayList<buyingItem>, filenam
 // Function to read JSON from a file and deserialize it into a list of `users`
 fun readJsonFromFile(context: Context, filename: String): ArrayList<users> {
 
-    val file = File(context.filesDir, "users.json")
+    val file = File(context.filesDir, filename)
 
     if (!file.exists()) file.createNewFile()
+
+    if (file.length() == 0L) writeJsonToFile(LocalContext.current, arrayListOf(users("test", "")) ,filename)
+
 
     // Open the file input stream
     val fileInputStream: FileInputStream = context.openFileInput(filename)
@@ -189,11 +192,11 @@ fun readJsonFromFile(context: Context, filename: String): ArrayList<users> {
 // Function to read JSON from a file and deserialize it into a list of `users`
 fun readBuyingJsonFromFile(context: Context, filename: String): ArrayList<buyingItem> {
 
-    val file = File(context.filesDir, "buying.json")
+    val file = File(context.filesDir, filename)
 
     if (!file.exists()) {file.createNewFile()}
 
-    if (file.length() == 0L) writeBuyingJsonToFile(LocalContext.current, arrayListOf(buyingItem("test", 0.0, 0, "s")) ,"buying.json")
+    if (file.length() == 0L) writeBuyingJsonToFile(LocalContext.current, arrayListOf(buyingItem("logo", 0.0, 0, "s")) ,filename)
 
     // Open the file input stream
     val fileInputStream: FileInputStream = context.openFileInput(filename)
@@ -256,6 +259,7 @@ fun MainApp() {
     }
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingCart(navController: NavController) {
@@ -284,32 +288,33 @@ fun ShoppingCart(navController: NavController) {
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    for (item in cart) {
-                        item {
-                            Card(Modifier.fillMaxSize()) {
-                                Row {
+                    for (product in cart) {
+                        if(product.name!="logo") {
+                            item {
+                                Card(Modifier.fillMaxSize()) {
+                                    Row {
+                                        Image(
+                                            painter = painterResource(
+                                                context.resources.getIdentifier(
+                                                    product.name,
+                                                    "drawable",
+                                                    context.packageName
+                                                )
+                                            ),
+                                            contentDescription = "Item",
+                                            modifier = Modifier
+                                                .size(150.dp)
+                                        )
 
-                                    Image(
-                                        painter = painterResource(
-                                            LocalContext.current.resources.getIdentifier(
-                                                item.name,
-                                                "drawable",
-                                                LocalContext.current.packageName
-                                            )
-                                        ),
-                                        contentDescription = "Item",
-                                        modifier = Modifier
-                                            .size(150.dp)
-                                    )
-
-                                    Column(
-                                        Modifier.fillMaxSize(),
-                                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        Text(item.name, fontWeight = FontWeight.Bold)
-                                        Text(item.price.toString())
-                                        Text(item.quantity.toString())
-                                        Text(item.size)
+                                        Column(
+                                            Modifier.fillMaxSize(),
+                                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            Text(product.name, fontWeight = FontWeight.Bold)
+                                            Text(product.price.toString())
+                                            Text(product.quantity.toString())
+                                            Text(product.size)
+                                        }
                                     }
                                 }
                             }
@@ -325,7 +330,7 @@ fun ShoppingCart(navController: NavController) {
                     ) { Text("pay now") }
                     Button(
                         onClick = {
-                            cart = arrayListOf(buyingItem("logo", 0.0, 0, ""))
+                            cart = arrayListOf(buyingItem("logo", 0.0, 0, "S"))
                             writeBuyingJsonToFile(context, cart, "buying.json")
                         },
                     ) { Text("Clear cart") }
