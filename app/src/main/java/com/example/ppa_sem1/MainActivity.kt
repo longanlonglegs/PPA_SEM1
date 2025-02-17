@@ -108,6 +108,7 @@ import java.io.InputStreamReader
 import java.nio.charset.Charset
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
+import com.example.compose.AppTheme
 import com.gowtham.ratingbar.RatingBar
 import com.gowtham.ratingbar.RatingBarStyle
 import com.gowtham.ratingbar.StepSize
@@ -122,7 +123,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            PPA_SEM1Theme {
+            AppTheme {
                 item = remember { mutableStateOf(listOf("")) }
                 MainApp()
             }
