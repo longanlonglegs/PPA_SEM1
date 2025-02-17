@@ -1,6 +1,7 @@
 package com.example.ppa_sem1
 
 import android.content.Context
+import android.content.res.Resources.Theme
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -27,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -38,6 +40,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Visibility
@@ -54,6 +57,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -365,12 +369,40 @@ fun MainPage(navController: NavController) {
                     Image(painterResource(R.drawable.logo), "icon", Modifier.padding(10.dp))
                 },
                 actions = {
-                    IconButton(onClick = {
-                        navController.navigate("shoppingcart")
-                    }) {Icon(Icons.Default.ShoppingCart, contentDescription = "shopping cart")}
+
                     IconButton(onClick = {
                         navController.navigate("loginpage")
                     }) {Icon(Icons.Default.AccountCircle, contentDescription = "login")}
+
+                    var expanded by remember { mutableStateOf(false) }
+
+                    IconButton(onClick = {
+                        expanded = !expanded
+                    },
+                    )  { Icon((Icons.Default.MoreVert), contentDescription = "LEAVE REVIEW")}
+                    Box(
+                        modifier = Modifier
+                            .padding(16.dp)
+                    ) {
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("About") },
+                                onClick = { navController.navigate("info")}
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Contact Us") },
+                                onClick = {navController.navigate("contact") }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Leave a review") },
+                                onClick = { navController.navigate("review")}
+                            )
+                        }
+                    }
                 }
             )
         },
@@ -411,7 +443,8 @@ fun MainPage(navController: NavController) {
                             onClick = {
                                 item.value = listOf(element.name, element.price.toString())
                                 Log.d("valueCheck","${element.price}")
-                                navController.navigate("itempage/${element.name}/${element.price}")
+                                navController.navigate("itempage/${element.name}/${element.price}"
+                                )
                             },
                             elevation = CardDefaults.cardElevation(
                                 defaultElevation = 10.dp
@@ -460,43 +493,10 @@ fun MainPage(navController: NavController) {
         },
 
         floatingActionButton = {
-            var expanded by remember { mutableStateOf(false) }
             FloatingActionButton(onClick = {
-                expanded = !expanded
-            },
-               )  { Icon((Icons.Filled.Info), contentDescription = "LEAVE REVIEW")}
-            Box(
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("About") },
-                        onClick = { navController.navigate("info")}
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Contact Us") },
-                        onClick = {navController.navigate("contact") }
-                    )
-                }
-            }
+                navController.navigate("shoppingcart")
+            }) {Icon(Icons.Default.ShoppingCart, contentDescription = "shopping cart")}
         },
-        bottomBar = {
-            BottomAppBar(
-                content = {
-                    Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally){
-                        Button(onClick = { navController.navigate("review") }) {
-                            Text("Leave a review!", fontSize = 25.sp)
-
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
     )
 }
 
@@ -528,49 +528,50 @@ fun LoginPage(navController: NavController) {
             fontWeight = FontWeight.Bold,
             fontSize = 30.sp)
 
-        TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier.padding(10.dp), singleLine = true)
-        TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier.padding(10.dp), singleLine = true,
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            trailingIcon = {
-                val image = if (passwordVisible)
-                    Icons.Filled.Visibility
-                else Icons.Filled.VisibilityOff
+        Column (Modifier.fillMaxWidth().padding(10.dp).align(Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier.padding(10.dp).fillMaxWidth(), singleLine = true)
+            TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier.padding(10.dp).fillMaxWidth(), singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    val image = if (passwordVisible)
+                        Icons.Filled.Visibility
+                    else Icons.Filled.VisibilityOff
 
-                // Please provide localized description for accessibility services
-                val description = if (passwordVisible) "Hide password" else "Show password"
+                    // Please provide localized description for accessibility services
+                    val description = if (passwordVisible) "Hide password" else "Show password"
 
-                IconButton(onClick = {passwordVisible = !passwordVisible}){
-                    Icon(imageVector  = image, description)
+                    IconButton(onClick = {passwordVisible = !passwordVisible}){
+                        Icon(imageVector  = image, description)
+                    }
+                })
+            Button(onClick = {
+                for (user in userList) {
+                    if (user == users(username, password)) {
+                        navController.navigate("mainpage")
+                        Toast.makeText(context, "Logged in!", Toast.LENGTH_SHORT).show()
+                        state = !state
+                    }
                 }
-            })
-        Button(onClick = {
-            for (user in userList) {
-                if (user == users(username, password)) {
-                    navController.navigate("mainpage")
-                    Toast.makeText(context, "Logged in!", Toast.LENGTH_SHORT).show()
-                    state = !state
+
+                if (!state) {
+                    Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT).show()
                 }
+
+                state = false
+
+            }) {
+                Text("Login")
             }
-
-            if (!state) {
-                Toast.makeText(context, "Invalid username or password", Toast.LENGTH_SHORT).show()
-            }
-
-            state = false
-
-        }) {
-            Text("Login")
+            Text("Don't have an account? Sign Up here", modifier = Modifier
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = { navController.navigate("signup") }
+                    )
+                }
+                .padding(10.dp),
+                textDecoration = TextDecoration.Underline)
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        Text("Don't have an account? Sign Up here", modifier = Modifier
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { navController.navigate("signup") }
-                )
-            }
-            .padding(10.dp),
-            textDecoration = TextDecoration.Underline)
     }
 }
 
