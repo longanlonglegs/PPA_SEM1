@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -62,6 +63,7 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -111,6 +113,7 @@ import com.example.compose.AppTheme
 import com.gowtham.ratingbar.RatingBar
 import com.gowtham.ratingbar.RatingBarStyle
 import com.gowtham.ratingbar.StepSize
+import kotlin.math.round
 
 class MainActivity : ComponentActivity() {
 
@@ -130,7 +133,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class buyingItem(val name: String, val price: Double, val quantity: Int, val size: String)
+data class buyingItem(val name: String, var price: Double, var quantity: Int, val size: String)
 data class clothes(val name: String, val price: Double)
 data class users(val name: String, val password: String)
 
@@ -260,7 +263,7 @@ fun MainApp() {
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class,ExperimentalFoundationApi::class)
 @Composable
 fun ShoppingCart(navController: NavController) {
 
@@ -280,17 +283,20 @@ fun ShoppingCart(navController: NavController) {
         content = { paddingValues ->
 
             Column(
-                Modifier.fillMaxSize().padding(paddingValues),
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 LazyColumn(
-                    Modifier.height(400.dp),
+                    Modifier.heightIn(0.dp,500.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     for (product in cart) {
                         if(product.name!="logo") {
                             item {
+                                var quantity_mutable by remember { mutableIntStateOf(product.quantity) }
                                 Card(Modifier.fillMaxSize()) {
                                     Row {
                                         Image(
@@ -311,9 +317,30 @@ fun ShoppingCart(navController: NavController) {
                                             verticalArrangement = Arrangement.spacedBy(10.dp)
                                         ) {
                                             Text(product.name, fontWeight = FontWeight.Bold)
-                                            Text(product.price.toString())
-                                            Text(product.quantity.toString())
-                                            Text(product.size)
+                                            Text("\$${round(product.price*product.quantity*100).toDouble()/100}")
+                                            Row (verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.width(200.dp)){
+                                                Button(onClick = {
+                                                    --product.quantity
+                                                    --quantity_mutable
+                                                    if(product.quantity==0){
+                                                        val newCart = ArrayList(cart)
+                                                        newCart.remove(product)
+                                                        cart = newCart
+                                                    }
+                                                    writeBuyingJsonToFile(context, cart, "buying.json")
+                                                                 }) {
+                                                    Text("-")
+                                                }
+                                                Text("$quantity_mutable")
+                                                Button(onClick = {
+                                                    ++product.quantity
+                                                    ++quantity_mutable
+                                                    writeBuyingJsonToFile(context, cart, "buying.json")
+                                                }) {
+                                                    Text("+")
+                                                }
+                                            }
+                                            Text("Size ${product.size}")
                                         }
                                     }
                                 }
@@ -321,8 +348,9 @@ fun ShoppingCart(navController: NavController) {
                         }
                     }
                 }
-
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier
+                    .fillMaxWidth()
+                    .height(50.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(
                         onClick = {
                             navController.navigate("paymentpage")
@@ -434,7 +462,9 @@ fun MainPage(navController: NavController) {
                                 .height(150.dp)
                                 .padding(vertical = 5.dp, horizontal = 15.dp)
                         ) {
-                            Row (Modifier.fillMaxSize().padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(15.dp)) {
+                            Row (Modifier
+                                .fillMaxSize()
+                                .padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(15.dp)) {
                                 Image(
                                     painterResource(imageResourceID), "item 1",
                                     contentScale = ContentScale.Crop,
@@ -443,7 +473,9 @@ fun MainPage(navController: NavController) {
                                         .background(Color.LightGray)
                                         .padding(10.dp)
                                 )
-                                Column (Modifier.fillMaxHeight().padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)){
+                                Column (Modifier
+                                    .fillMaxHeight()
+                                    .padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)){
                                     Text(
                                         text = element.name,
                                         textAlign = TextAlign.Center,
@@ -782,7 +814,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
     var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0, ""))) }
     var quantity by remember { mutableStateOf(1) }
     val price = priceS.toDouble()
-    var size by remember { mutableStateOf("") }
+    var size by remember { mutableStateOf("S") }
     var state by remember { mutableStateOf(1) }
 
     cart = readBuyingJsonFromFile(context, "buying.json")
@@ -826,7 +858,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "$$price",
+                    text = "$${price*quantity}",
                     fontWeight = FontWeight.SemiBold
                 )
                 Column {
@@ -839,7 +871,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                             )
                         }
                         Spacer(modifier = Modifier.width(20.dp))
-                        Button(onClick = { quantity += -1 }) {
+                        Button(onClick = { quantity += -1 }, enabled = quantity>1) {
                             Icon(
                                 Icons.Default.ArrowDownward,
                                 "minus"
@@ -851,7 +883,9 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
 
-                    Card (Modifier.padding(10.dp).defaultMinSize(minWidth = 40.dp)) {
+                    Card (Modifier
+                        .padding(10.dp)
+                        .defaultMinSize(minWidth = 40.dp)) {
 
                         Column (horizontalAlignment = Alignment.CenterHorizontally){
 
@@ -865,7 +899,9 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                         }
                     }
 
-                    Card (Modifier.padding(10.dp).defaultMinSize(minWidth = 70.dp)) {
+                    Card (Modifier
+                        .padding(10.dp)
+                        .defaultMinSize(minWidth = 70.dp)) {
 
                         Column  (horizontalAlignment = Alignment.CenterHorizontally){
 
@@ -879,7 +915,9 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                         }
                     }
 
-                    Card (Modifier.padding(10.dp).defaultMinSize(minWidth = 70.dp)) {
+                    Card (Modifier
+                        .padding(10.dp)
+                        .defaultMinSize(minWidth = 70.dp)) {
 
                         Column  (horizontalAlignment = Alignment.CenterHorizontally){
 
@@ -893,7 +931,9 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                         }
                     }
 
-                    Card (Modifier.padding(10.dp).defaultMinSize(minWidth = 70.dp)) {
+                    Card (Modifier
+                        .padding(10.dp)
+                        .defaultMinSize(minWidth = 70.dp)) {
 
                         Column  (horizontalAlignment = Alignment.CenterHorizontally){
 
@@ -909,13 +949,19 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
 
 
                 }
-
-                Text(size)
-
                 Spacer(modifier = Modifier.padding(15.dp))
                 Button(
                     onClick = {
-                        cart += buyingItem(name, price, quantity, size)
+                        var found=false
+                        for((index,product) in cart.withIndex()){
+                            if(product.name == name && product.size==size){
+                                cart[index].quantity+=quantity
+                                found=true
+                            }
+                        }
+                        if(!found){
+                            cart += buyingItem(name, price, quantity, size)
+                        }
                         writeBuyingJsonToFile(context, cart, "buying.json")
                         navController.navigate("mainpage")
                         Toast.makeText(context, "Item added to cart!", Toast.LENGTH_SHORT).show()
