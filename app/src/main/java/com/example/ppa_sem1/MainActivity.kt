@@ -96,7 +96,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.ppa_sem1.MainActivity.Companion.item
-import com.example.ppa_sem1.ui.theme.PPA_SEM1Theme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
@@ -964,7 +963,7 @@ fun Contact(navController: NavController){
 @Preview(showBackground = true)
 @Composable
 fun ContactPreview(){
-    PPA_SEM1Theme {
+    AppTheme {
         Contact(rememberNavController())
     }
 }
@@ -972,7 +971,7 @@ fun ContactPreview(){
 @Preview(showBackground = true)
 @Composable
 fun MainPagepreview() {
-    PPA_SEM1Theme {
+    AppTheme {
         val navController = rememberNavController()
         MainPage( navController)
     }
@@ -981,7 +980,7 @@ fun MainPagepreview() {
 @Preview(showBackground = true)
 @Composable
 fun LoginPagepreview() {
-    PPA_SEM1Theme {
+    AppTheme {
         val navController = rememberNavController()
         LoginPage(navController)
     }
@@ -990,7 +989,7 @@ fun LoginPagepreview() {
 @Preview(showBackground = true)
 @Composable
 fun PaymentPagepreview() {
-    PPA_SEM1Theme {
+    AppTheme {
         val navController = rememberNavController()
         PaymentPage(navController)
     }
@@ -999,7 +998,7 @@ fun PaymentPagepreview() {
 @Preview(showBackground = true)
 @Composable
 fun ItemPagepreview() {
-    PPA_SEM1Theme {
+    AppTheme {
         val name:String ="shorts"
         val price:String = ""
         val navController = rememberNavController()
@@ -1010,7 +1009,7 @@ fun ItemPagepreview() {
 @Preview(showBackground = true)
 @Composable
 fun PaidPagepreview() {
-    PPA_SEM1Theme {
+    AppTheme {
         val navController = rememberNavController()
         PaidPage(navController)
     }
@@ -1019,7 +1018,7 @@ fun PaidPagepreview() {
 @Preview(showBackground = true)
 @Composable
 fun Infopreview() {
-    PPA_SEM1Theme {
+    AppTheme {
         val navController = rememberNavController()
         Info(navController)
     }
@@ -1029,7 +1028,7 @@ fun Infopreview() {
 @Preview(showBackground = true)
 @Composable
 fun SignUppreview() {
-    PPA_SEM1Theme {
+    AppTheme {
         val navController = rememberNavController()
         SignUpPage(navController)
     }
@@ -1038,7 +1037,7 @@ fun SignUppreview() {
 @Preview(showBackground = true)
 @Composable
 fun ShoppingCartpreview() {
-    PPA_SEM1Theme {
+    AppTheme {
         val navController = rememberNavController()
         ShoppingCart(navController)
     }
