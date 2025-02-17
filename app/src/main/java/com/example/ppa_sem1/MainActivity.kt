@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -75,6 +76,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -93,6 +95,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
@@ -294,7 +297,7 @@ fun ShoppingCart(navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 LazyColumn(
-                    Modifier.heightIn(0.dp,500.dp),
+                    Modifier.heightIn(0.dp,500.dp).padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -303,7 +306,7 @@ fun ShoppingCart(navController: NavController) {
                             item {
                                 var quantity_mutable by remember { mutableIntStateOf(product.quantity) }
                                 Card(Modifier.fillMaxSize()) {
-                                    Row {
+                                    Row(modifier = Modifier.padding(10.dp)) {
                                         Image(
                                             painter = painterResource(
                                                 context.resources.getIdentifier(
@@ -322,7 +325,7 @@ fun ShoppingCart(navController: NavController) {
                                             verticalArrangement = Arrangement.spacedBy(10.dp)
                                         ) {
                                             Text(product.name, fontWeight = FontWeight.Bold)
-                                            Text("\$${round(product.price*product.quantity*100).toDouble()/100}")
+                                            Text("\$%.2f".format(round(product.price*product.quantity*100).toDouble()/100))
                                             Row (verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.width(200.dp)){
                                                 Button(onClick = {
                                                     --product.quantity
@@ -334,7 +337,7 @@ fun ShoppingCart(navController: NavController) {
                                                     }
                                                     writeBuyingJsonToFile(context, cart, "buying.json")
                                                                  }) {
-                                                    Text("-")
+                                                    Text("-", fontSize = 30.sp)
                                                 }
                                                 Text("$quantity_mutable")
                                                 Button(onClick = {
@@ -342,7 +345,7 @@ fun ShoppingCart(navController: NavController) {
                                                     ++quantity_mutable
                                                     writeBuyingJsonToFile(context, cart, "buying.json")
                                                 }) {
-                                                    Text("+")
+                                                    Text("+", fontSize = 30.sp)
                                                 }
                                             }
                                             Text("Size ${product.size}")
@@ -355,12 +358,13 @@ fun ShoppingCart(navController: NavController) {
                 }
                 Row(Modifier
                     .fillMaxWidth()
-                    .height(50.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    .height(70.dp)
+                    .padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(
                         onClick = {
                             navController.navigate("paymentpage")
                         },
-                    ) { Text("pay now") }
+                    ) { Text("Pay now") }
                     Button(
                         onClick = {
                             cart = arrayListOf(buyingItem("logo", 0.0, 0, "S"))
@@ -425,10 +429,10 @@ fun MainPage(navController: NavController) {
                                 onClick = {navController.navigate("contact") }
                             )
 
-                            DropdownMenuItem(
-                                text = { Text("Leave a review") },
-                                onClick = { navController.navigate("review")}
-                            )
+//                            DropdownMenuItem(
+//                                text = { Text("Leave a review") },
+//                                onClick = { navController.navigate("review")}
+//                            )
                         }
                     }
                 }
@@ -489,8 +493,10 @@ fun MainPage(navController: NavController) {
                                     painterResource(imageResourceID), "item 1",
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
+                                        .clip(RoundedCornerShape(5.dp))
                                         .size(100.dp, 100.dp)
-                                        .padding(10.dp)
+                                        .background(Color.White)
+
                                 )
                                 Column (Modifier
                                     .fillMaxHeight()
@@ -505,14 +511,15 @@ fun MainPage(navController: NavController) {
                                         text = "\$${element.price}",
                                         textAlign = TextAlign.Center,
                                     )
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                                    Row(modifier = Modifier.width(200.dp)){
                                         RatingBar(
                                             value = rating[index],
                                             style = RatingBarStyle.Fill(),
                                             onValueChange = {
                                                 rating[index] = it
                                             },
-                                            stepSize = StepSize.HALF
+                                            stepSize = StepSize.HALF,
+                                            spaceBetween = 2.dp
                                         ){}
                                     }
                                 }
@@ -841,34 +848,33 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                     ),
                     contentDescription = "Item",
                     modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
                         .size(150.dp)
+                        .background(Color.White)
+
                 )
                 Text(
                     text = name,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "$${price*quantity}",
+                    text = "\$%.2f".format(round(price*quantity*100)/100),
                     fontWeight = FontWeight.SemiBold
                 )
-                Column {
-                    Text(text = "QUANTITY: $quantity")
-                    Row {
-                        Button(onClick = { quantity += 1 }) {
-                            Icon(
-                                Icons.Default.ArrowUpward,
-                                "add"
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Button(onClick = { quantity += -1 }, enabled = quantity>1) {
-                            Icon(
-                                Icons.Default.ArrowDownward,
-                                "minus"
-                            )
-                        }
+                Row (horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.width(250.dp)){
+                    Button(onClick = { quantity += -1 }, enabled = quantity>1) {
+                        Icon(
+                            Icons.Default.ArrowDownward,
+                            "minus"
+                        )
                     }
-
+                    Text("$quantity")
+                    Button(onClick = { quantity += 1 }) {
+                        Icon(
+                            Icons.Default.ArrowUpward,
+                            "add"
+                        )
+                    }
                 }
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
