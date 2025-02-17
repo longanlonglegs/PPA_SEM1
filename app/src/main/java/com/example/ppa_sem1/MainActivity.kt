@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -63,12 +64,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -99,6 +103,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -244,8 +249,17 @@ fun readJsonFromAssets(context: Context): String {
 @Composable
 fun MainApp() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "mainpage") {
-        composable("mainpage") {MainPage(navController)}
+    NavHost(navController = navController, startDestination = "mainpage/false") {
+        composable("mainpage/{login}",
+            listOf(
+                navArgument("login"){NavType.StringType}
+            )
+        ) {navBackStackEntry ->
+            val login = navBackStackEntry.arguments?.getString("login")
+            if(login!=null){
+                MainPage(navController,login)
+            }
+        }
         composable("loginpage") { LoginPage(navController) }
         composable("paymentpage") { PaymentPage(navController) }
         composable("itempage/{name}/{price}",
@@ -284,7 +298,7 @@ fun ShoppingCart(navController: NavController) {
             TopAppBar(title = { Text("Shopping Cart")},
                 navigationIcon = {
                     IconButton(onClick = {
-                        navController.navigate("mainpage")
+                        navController.navigate("mainpage/false")
                     }){Icon(Icons.AutoMirrored.Filled.ArrowBack, "")}
                 })
         },
@@ -379,9 +393,14 @@ fun ShoppingCart(navController: NavController) {
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MainPage(navController: NavController) {
+fun MainPage(navController: NavController, login:String) {
 
     val context = LocalContext.current
+
+    var loginState:Boolean = false
+    if(!loginState){
+        loginState=login=="true"
+    }
 
     var search by remember { mutableStateOf("") }
 
@@ -401,16 +420,59 @@ fun MainPage(navController: NavController) {
                     Image(painterResource(R.drawable.logo), "icon", Modifier.padding(10.dp))
                 },
                 actions = {
-
+                    var openAlertDialog by remember { mutableStateOf(false) }
+                    when {
+                        openAlertDialog -> {
+                            AlertDialog(
+                                icon = {
+                                    Icon(Icons.Default.Info, contentDescription = "Example Icon")
+                                },
+                                title = {
+                                    Text(text = "Logout")
+                                },
+                                text = {
+                                    Text(text = "Are you sure you want to log out?")
+                                },
+                                onDismissRequest = {
+                                    openAlertDialog = false
+                                },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            Toast.makeText(context, "Successfully logged out", Toast.LENGTH_SHORT).show()
+                                            loginState = false
+                                            openAlertDialog = false
+                                        }
+                                    ) {
+                                        Text("Confirm")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(
+                                        onClick = {
+                                            openAlertDialog = false
+                                        }
+                                    ) {
+                                        Text("Dismiss")
+                                    }
+                                }
+                            )
+                        }
+                    }
                     IconButton(onClick = {
-                        navController.navigate("loginpage")
+                        if(loginState == false){
+                            navController.navigate("loginpage")
+                        }else{
+                            openAlertDialog = true
+                        }
                     }) {Icon(Icons.Default.AccountCircle, contentDescription = "login")}
 
                     var expanded by remember { mutableStateOf(false) }
 
-                    IconButton(onClick = {
-                        expanded = !expanded
-                    },
+                    IconButton(
+                        onClick = {
+                            expanded = !expanded
+                        },
                     )  { Icon((Icons.Default.MoreVert), contentDescription = "LEAVE REVIEW")}
                     Box(
                         modifier = Modifier
@@ -552,19 +614,18 @@ fun LoginPage(navController: NavController) {
 
         Spacer(modifier = Modifier.height(50.dp))
         Row (modifier = Modifier.padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically){
-            IconButton(onClick = { navController.navigate("mainpage") }) {
+            IconButton(onClick = { navController.navigate("mainpage/false") }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null
                 )
             }
             Spacer(modifier = Modifier.width(10.dp))
-            Text("Login")
+            Text("Login", fontSize = 28.sp,fontWeight = FontWeight.Bold)
         }
-        Text("Hi there",
+        Text("Welcome Back",
             Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
             fontSize = 30.sp)
 
         Column (Modifier.fillMaxWidth().padding(10.dp).align(Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -587,7 +648,7 @@ fun LoginPage(navController: NavController) {
             Button(onClick = {
                 for (user in userList) {
                     if (user == users(username, password)) {
-                        navController.navigate("mainpage")
+                        navController.navigate("mainpage/true")
                         Toast.makeText(context, "Logged in!", Toast.LENGTH_SHORT).show()
                         state = !state
                     }
@@ -628,14 +689,14 @@ fun SignUpPage(navController: NavController) {
 
         Spacer(modifier = Modifier.height(50.dp))
         Row(modifier = Modifier.padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { navController.navigate("mainpage") }) {
+            IconButton(onClick = { navController.navigate("mainpage/false") }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null
                 )
             }
             Spacer(modifier = Modifier.width(10.dp))
-            Text("Sign In")
+            Text("Sign In",fontSize = 28.sp)
         }
         TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier.padding(10.dp), singleLine = true)
         TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier.padding(10.dp), singleLine = true,
@@ -680,7 +741,7 @@ fun SignUpPage(navController: NavController) {
                 if(password == cpassword){
                     userList.add(users(username, password))
                     writeJsonToFile(context, userList, "users.json")
-                    navController.navigate("mainpage")
+                    navController.navigate("mainpage/true")
                     Toast.makeText(context, "Sign up successful!", Toast.LENGTH_SHORT).show()
                 }else{
                     Toast.makeText(context, "Password and confirm do not match",Toast.LENGTH_SHORT).show()
@@ -703,15 +764,16 @@ fun SignUpPage(navController: NavController) {
     }
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun PaymentPage( navController: NavController) {
 
     val context = LocalContext.current
-    var money by remember { mutableStateOf(0.0) }
     var cart by remember { mutableStateOf(arrayListOf(buyingItem("", 0.0, 0, ""))) }
+    val money by remember(cart) {
+        derivedStateOf { round(cart.sumOf { it.price }*100)/100 }
+    }
     cart = readBuyingJsonFromFile(context, "buying.json")
-    for (item in cart) money.plus(item.price)
-
     Scaffold (content = {paddingValues ->
         Column(Modifier
             .padding(paddingValues)
@@ -750,7 +812,7 @@ fun PaidPage(navController: NavController) {
 
         }
         Text("Thanks for the shopping with us!", fontSize = 25.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 50.sp, textAlign = TextAlign.Center)
-        Button(onClick = {navController.navigate("mainpage")}) { Icon(Icons.Default.Home, "home") }
+        Button(onClick = {navController.navigate("mainpage/false")}) { Icon(Icons.Default.Home, "home") }
         Spacer(modifier = Modifier.height(200.dp))
     })
 }
@@ -959,7 +1021,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                             cart += buyingItem(name, price, quantity, size)
                         }
                         writeBuyingJsonToFile(context, cart, "buying.json")
-                        navController.navigate("mainpage")
+                        navController.navigate("mainpage/false")
                         Toast.makeText(context, "Item added to cart!", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier
@@ -1025,7 +1087,7 @@ fun ContactPreview(){
 fun MainPagepreview() {
     AppTheme {
         val navController = rememberNavController()
-        MainPage( navController)
+        MainPage( navController, "hi")
     }
 }
 
@@ -1118,14 +1180,16 @@ fun Info(navController: NavController){
                     .fillMaxSize()
                     .padding(paddingValues)
             ){
-                Spacer(Modifier.height(30.dp))
+                Spacer(Modifier.height(50.dp))
                 Image(
-                    painter = painterResource(R.drawable.todo),
+                    painter = painterResource(R.drawable.logo),
                     contentDescription = null,
                     modifier = Modifier
                         .padding(10.dp)
+                        .size(200.dp)
                 )
-                Text("blah blah")
+                Spacer(Modifier.height(20.dp))
+                Text("Welcome to Peak Performance Gear, your one-stop destination for top-quality sports apparel, footwear, and equipment. Our mission is to empower athletes and fitness enthusiasts with the best gear to achieve their peak performance. We understand the importance of quality, innovation, and comfort, which is why we source products from the most trusted brands in the industry. \nAt Peak Performance Gear, we cater to all types of athletes—from beginners taking their first steps into fitness to professionals pushing their limits. We believe that having the right gear can make a significant difference in performance, motivation, and overall experience. That’s why we offer a carefully curated selection of high-performance gear tailored to various sports and activities.", modifier = Modifier.padding(30.dp))
             }
         }
     )
