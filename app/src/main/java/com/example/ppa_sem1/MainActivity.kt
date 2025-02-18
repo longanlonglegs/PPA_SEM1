@@ -14,6 +14,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.AbsoluteCutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -73,6 +75,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -311,7 +314,9 @@ fun ShoppingCart(navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 LazyColumn(
-                    Modifier.heightIn(0.dp,500.dp).padding(10.dp),
+                    Modifier
+                        .heightIn(0.dp, 700.dp)
+                        .padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -350,7 +355,10 @@ fun ShoppingCart(navController: NavController) {
                                                         cart = newCart
                                                     }
                                                     writeBuyingJsonToFile(context, cart, "buying.json")
-                                                                 }) {
+                                                                 },
+                                                    modifier = Modifier
+                                                        .size(40.dp),
+                                                    contentPadding = PaddingValues(5.dp)) {
                                                     Text("-", fontSize = 30.sp)
                                                 }
                                                 Text("$quantity_mutable")
@@ -358,7 +366,11 @@ fun ShoppingCart(navController: NavController) {
                                                     ++product.quantity
                                                     ++quantity_mutable
                                                     writeBuyingJsonToFile(context, cart, "buying.json")
-                                                }) {
+                                                },
+                                                    modifier = Modifier
+                                                        .size(40.dp),
+                                                    contentPadding = PaddingValues(5.dp),
+                                                ) {
                                                     Text("+", fontSize = 30.sp)
                                                 }
                                             }
@@ -373,7 +385,7 @@ fun ShoppingCart(navController: NavController) {
                 Row(Modifier
                     .fillMaxWidth()
                     .height(70.dp)
-                    .padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    .padding(10.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                     Button(
                         onClick = {
                             navController.navigate("paymentpage")
@@ -407,8 +419,6 @@ fun MainPage(navController: NavController, login:String) {
     var itemList by remember { mutableStateOf(listOf(clothes("testing", 30.00)))}
 
     itemList = parseJsonList(readJsonFromAssets(context))
-
-    var rating = remember { mutableStateListOf<Float>().apply { addAll(List(itemList.size){0f}) } } //default rating will be 1
 
     Scaffold (
         topBar = {
@@ -573,17 +583,6 @@ fun MainPage(navController: NavController, login:String) {
                                         text = "\$${element.price}",
                                         textAlign = TextAlign.Center,
                                     )
-                                    Row(modifier = Modifier.width(200.dp)){
-                                        RatingBar(
-                                            value = rating[index],
-                                            style = RatingBarStyle.Fill(),
-                                            onValueChange = {
-                                                rating[index] = it
-                                            },
-                                            stepSize = StepSize.HALF,
-                                            spaceBetween = 2.dp
-                                        ){}
-                                    }
                                 }
                             }
 
@@ -628,9 +627,16 @@ fun LoginPage(navController: NavController) {
             textAlign = TextAlign.Center,
             fontSize = 30.sp)
 
-        Column (Modifier.fillMaxWidth().padding(10.dp).align(Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier.padding(10.dp).fillMaxWidth(), singleLine = true)
-            TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier.padding(10.dp).fillMaxWidth(), singleLine = true,
+        Column (Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+            .align(Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            TextField(label = { Text("Username")}, value = username, onValueChange = {username=it}, modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth(), singleLine = true)
+            TextField(label = { Text("Password")}, value = password, onValueChange = {password=it}, modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth(), singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
@@ -804,7 +810,9 @@ fun PaymentPage( navController: NavController) {
 
 @Composable
 fun PaidPage(navController: NavController) {
-    Column(Modifier.fillMaxSize().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp), content = {
+    Column(Modifier
+        .fillMaxSize()
+        .padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp), content = {
         Spacer(Modifier.padding(40.dp))
         Row (Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Image(painterResource(R.drawable.logo), "logo")
@@ -893,6 +901,7 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
         },
         content = {
             paddingValues->
+            var rating by remember { mutableFloatStateOf(0f) }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -1030,6 +1039,20 @@ fun ItemPage(modifier: Modifier, navController: NavController, item: MutableStat
                         Text(text = "Add to Cart")
                     }
                 )
+                Spacer(modifier = Modifier.padding(20.dp))
+                Text("Leave a review")
+                Spacer(modifier = Modifier.height(7.dp))
+                Row(modifier = Modifier.width(200.dp)){
+                    RatingBar(
+                        value = rating,
+                        style = RatingBarStyle.Fill(),
+                        onValueChange = {
+                            rating = it
+                        },
+                        stepSize = StepSize.HALF,
+                        spaceBetween = 5.dp
+                    ){}
+                }
             }
         }
     )
@@ -1180,7 +1203,7 @@ fun Info(navController: NavController){
                     .fillMaxSize()
                     .padding(paddingValues)
             ){
-                Spacer(Modifier.height(50.dp))
+                Spacer(Modifier.height(30.dp))
                 Image(
                     painter = painterResource(R.drawable.logo),
                     contentDescription = null,
